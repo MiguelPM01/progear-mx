@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/ProGear.APi/">
+    <Project Path="ProGear.APi/ProGear.Api.csproj" />
+  </Folder>
+</Solution>
