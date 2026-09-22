@@ -434,6 +434,48 @@ foreach / API
 
 ---
 
+## Sesión — 22 de septiembre de 2026
+
+### Validación de datos del producto
+
+**Términos en inglés:** validation, business rule, whitespace, Bad Request, error code, fail fast.
+
+**Explicación sencilla:** Antes de crear un producto, la API revisa sus datos en un orden definido. `Nombre` y `SKU` no pueden ser `null`, vacíos ni estar compuestos únicamente por espacios. `Precio` no puede ser menor que cero, pero `0` sí es válido.
+
+**Cómo lo razoné:** Para el negocio, un valor como `"   "` no identifica un producto aunque técnicamente tenga caracteres. También decidí permitir `0` porque en el futuro puede representar una promoción como 2 x 1 o 3 x 2.
+
+**Ejemplo:**
+
+~~~csharp
+if (string.IsNullOrWhiteSpace(request.Nombre))
+{
+    return Results.BadRequest(new
+    {
+        Exito = false,
+        Codigo = "INVALID_PRODUCT_NAME",
+        Mensaje = "El nombre del producto no puede estar vacío."
+    });
+}
+
+if (request.Precio < 0)
+{
+    return Results.BadRequest(new
+    {
+        Exito = false,
+        Codigo = "INVALID_PRODUCT_PRICE",
+        Mensaje = "El precio del producto no puede ser menor que cero."
+    });
+}
+~~~
+
+**Estrategia de errores:** La API usa un objeto anónimo por ahora, con `Exito`, `Codigo` y `Mensaje`. Detiene la validación en el primer error y responde con HTTP `400 Bad Request`. La futura clase reutilizable de errores queda pendiente hasta que la repetición la justifique.
+
+**Error o duda:** Al inicio se consideró devolver todos los errores, pero se decidió que para esta etapa una respuesta con el primer error es más clara y evita sobrecargarla.
+
+**Qué aprendí:** Una regla de negocio se convierte en una condición concreta del código. `string.IsNullOrWhiteSpace` cubre `null`, `""` y espacios; `request.Precio < 0` permite exactamente el valor `0`.
+
+---
+
 ## Futuras sesiones
 
 - [ ] Crear y revisar productos.json.
@@ -442,4 +484,3 @@ foreach / API
 - [ ] Conectar la lista cargada con un endpoint de productos.
 - [ ] Validar las reglas de negocio de nombre, SKU y precio.
 - [ ] Registrar nuevos aprendizajes, errores y razonamientos con esta misma estructura.
-
