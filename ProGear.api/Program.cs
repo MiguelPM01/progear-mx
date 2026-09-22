@@ -83,7 +83,7 @@ var productos = new List<Producto>
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
         {
-            return (IResult)Results.BadRequest(new
+            return Results.BadRequest(new
             {
                 Exito = false,
                 Codigo = "INVALID_PRODUCT_NAME",
@@ -93,7 +93,7 @@ var productos = new List<Producto>
 
         if (string.IsNullOrWhiteSpace(request.Sku))
         {
-            return (IResult)Results.BadRequest(new
+            return Results.BadRequest(new
             {
                 Exito = false,
                 Codigo = "INVALID_PRODUCT_SKU",
@@ -103,7 +103,7 @@ var productos = new List<Producto>
 
         if (request.Precio < 0)
         {
-            return (IResult)Results.BadRequest(new
+            return Results.BadRequest(new
             {
                 Exito = false,
                 Codigo = "INVALID_PRODUCT_PRICE",
@@ -122,7 +122,7 @@ var productos = new List<Producto>
         productos.Add(producto);
         siguienteId++;
 
-        return (IResult)Results.Ok(producto);
+        return Results.Ok(producto);
 
     });
 

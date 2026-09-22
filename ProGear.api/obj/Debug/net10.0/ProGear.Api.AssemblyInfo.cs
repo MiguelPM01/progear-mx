@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ProGear.api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24707d1ffe6e0096ecb36505f76cfeb8308c25bb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0f710118cbcf2ee8f4f17252ca6afcd5ed0d8ea2")]
 [assembly: System.Reflection.AssemblyProductAttribute("ProGear.api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ProGear.api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

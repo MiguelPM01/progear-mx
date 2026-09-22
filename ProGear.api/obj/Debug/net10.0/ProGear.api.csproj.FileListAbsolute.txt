@@ -31,4 +31,11 @@ D:\progear-mx\progear-mx\ProGear.APi\obj\Debug\net10.0\refint\ProGear.Api.dll
 D:\progear-mx\progear-mx\ProGear.APi\obj\Debug\net10.0\ProGear.Api.pdb
 D:\progear-mx\progear-mx\ProGear.APi\obj\Debug\net10.0\ProGear.Api.genruntimeconfig.cache
 D:\progear-mx\progear-mx\ProGear.APi\obj\Debug\net10.0\ref\ProGear.Api.dll
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\appsettings.Development.json
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\appsettings.json
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\ProGear.Api.staticwebassets.endpoints.json
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\ProGear.Api.deps.json
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\ProGear.Api.runtimeconfig.json
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\ProGear.Api.dll
+C:\Users\migue\Documents\Codex\2026-09-22\referenced-chatgpt-conversation-this-is-an\work\progear-build-check\ProGear.Api.pdb
 D:\progear-mx\progear-mx\ProGear.Api\obj\Debug\net10.0\ProGear..1E6CAE2F.Up2Date
