@@ -2,6 +2,8 @@ using ProGear.Api;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 var taladro = new Producto
 {
     Id = 1,
@@ -60,6 +62,15 @@ var productos = new List<Producto>
 
     app.MapGet("/productos/{id}", (int id) =>
     {
+        if (id <= 0)
+            {
+                return Results.BadRequest(new ErrorResponse
+                {
+                    Exito = false,
+                    Codigo = "INVALID_PRODUCT_ID",
+                    Mensaje = "El identificador del producto debe ser mayor que cero."
+                });
+            }
         var producto = productos.Find(p => p.Id == id);
 
         if(producto != null)
@@ -68,7 +79,7 @@ var productos = new List<Producto>
         }
         else
         {
-            return Results.NotFound( new
+            return Results.NotFound( new ErrorResponse
             {
                 Exito = false,
                 Codigo = "PRODUCT_NOT_fOUND",
@@ -83,7 +94,7 @@ var productos = new List<Producto>
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
         {
-            return Results.BadRequest(new
+            return Results.BadRequest(new ErrorResponse
             {
                 Exito = false,
                 Codigo = "INVALID_PRODUCT_NAME",
@@ -93,7 +104,7 @@ var productos = new List<Producto>
 
         if (string.IsNullOrWhiteSpace(request.Sku))
         {
-            return Results.BadRequest(new
+            return Results.BadRequest(new ErrorResponse
             {
                 Exito = false,
                 Codigo = "INVALID_PRODUCT_SKU",
@@ -101,9 +112,19 @@ var productos = new List<Producto>
             });
         }
 
+        if (productos.Exists(p => p.Sku == request.Sku))
+        {
+            return Results.Conflict(new ErrorResponse
+            {
+               Exito = false,
+               Codigo = "DUPLICATED_SKU",
+               Mensaje = "El SKU del producto ya está registrado." 
+            });
+        }
+
         if (request.Precio < 0)
         {
-            return Results.BadRequest(new
+            return Results.BadRequest(new ErrorResponse
             {
                 Exito = false,
                 Codigo = "INVALID_PRODUCT_PRICE",
@@ -122,7 +143,7 @@ var productos = new List<Producto>
         productos.Add(producto);
         siguienteId++;
 
-        return Results.Ok(producto);
+        return Results.Created($"/productos/{producto.Id}", producto);
 
     });
 

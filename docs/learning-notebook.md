@@ -475,6 +475,97 @@ if (request.Precio < 0)
 **Qué aprendí:** Una regla de negocio se convierte en una condición concreta del código. `string.IsNullOrWhiteSpace` cubre `null`, `""` y espacios; `request.Precio < 0` permite exactamente el valor `0`.
 
 ---
+# Bitácora de aprendizaje — 2026-09-23
+
+## Objetivo de la sesión
+
+Comprender e implementar un `ErrorHandlingMiddleware` en ASP.NET Core y entender cómo participa en el HTTP Request Pipeline.
+
+## Experiencia de aprendizaje
+
+Al inicio, `Middleware`, `Pipeline`, `RequestDelegate`, `_next` y `HttpContext` se sentían abstractos y era difícil separar el middleware de las herramientas usadas para construirlo. La confusión principal era imaginar que el middleware debía revisar directamente si la request tenía `Nombre`, `Sku` o `Precio` y decidir si podía pasar.
+
+La idea se aclaró al separar responsabilidades:
+
+- `HttpContext` representa el contexto completo de la request actual, incluyendo `Request` y `Response`.
+- `CrearProductoRequest` representa los datos que necesita la operación concreta de crear un producto.
+- El middleware no necesita conocer las propiedades del producto. Su responsabilidad es dejar continuar la request y manejar una excepción que llegue hasta él.
+
+La analogía que ayudó fue pensar en el middleware como un vigilante dentro del edificio: ya estaba contratado, pero no hacía nada hasta que lo registramos en el edificio, es decir, en el pipeline.
+
+## Conceptos aprendidos
+
+### Middleware y pipeline
+
+Un middleware es una pieza del HTTP Request Pipeline que ejecuta una responsabilidad sobre la request y/o la response. Puede dejar continuar el procesamiento mediante `_next(context)` o intervenir y generar una respuesta.
+
+El pipeline se entendió como el recorrido de una request desde que llega hasta que se produce una response:
+
+```text
+HTTP Request
+    ↓
+ErrorHandlingMiddleware
+    ↓ _next(context)
+Resto del pipeline / endpoint
+    ↓
+HTTP Response
+```
+
+### Manejo de errores
+
+El `try/catch` se colocó alrededor de `await _next(context)`. Si ocurre una excepción durante el resto del procesamiento, el `catch` puede preparar una respuesta controlada:
+
+```text
+excepción
+    ↓
+catch
+    ↓
+StatusCode = 400
+ContentType = application/json
+    ↓
+ErrorResponse
+    ↓
+JSON en Response.Body
+```
+
+También quedó claro que convertir cualquier excepción en `400 Bad Request` es una simplificación del ejercicio. Un problema de base de datos podría corresponder a `500`, mientras que autenticación, autorización, recursos inexistentes y conflictos tienen otros significados. Refinar esa clasificación queda pendiente.
+
+## Error encontrado y resolución
+
+El middleware estaba construido, pero no funcionaba porque no se había registrado en `Program.cs`. Se agregó:
+
+```csharp
+app.UseMiddleware<ErrorHandlingMiddleware>();
+```
+
+La solución permitió que la clase formara parte realmente del pipeline.
+
+## Resultado tangible
+
+Se implementó y probó el flujo básico de `ErrorHandlingMiddleware` para el caso de una request de creación de producto con datos faltantes, como un `Sku` ausente:
+
+1. ASP.NET Core intenta procesar la request.
+2. Ocurre una excepción.
+3. El middleware la captura.
+4. Construye un `ErrorResponse` con `Exito`, `Codigo` y `Mensaje`.
+5. Serializa el objeto a JSON.
+6. Escribe el JSON en `Response.Body` y lo devuelve al cliente, probado desde Postman.
+
+## Qué queda pendiente
+
+- Diferenciar las excepciones y asignar códigos HTTP adecuados en lugar de usar `400` para cualquier excepción.
+- Mantener el middleware general, sin acoplarlo a `CrearProductoRequest`.
+- Continuar validando el vertical de Product Management con las pruebas y validaciones previstas para el MVP.
+
+## Reflexión
+
+La comprensión no apareció al memorizar la definición de middleware, sino al conectar el flujo completo: request, `_next(context)`, excepción, `catch`, `ErrorResponse`, serialización y response. La distinción entre el contexto HTTP completo y los datos específicos de una operación fue el aprendizaje más importante de la sesión.
+
+## Nota técnica
+
+La nota anterior conserva la experiencia y las confusiones de la sesión. Los detalles de implementación se mantienen separados dentro de esta misma entrada para que la bitácora no se convierta únicamente en documentación técnica.
+
+---
 
 ## Futuras sesiones
 
