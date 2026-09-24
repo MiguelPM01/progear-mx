@@ -14,6 +14,11 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 - Se corrigió el registro faltante en `Program.cs` mediante `app.UseMiddleware<ErrorHandlingMiddleware>()`.
 - Se probó el caso de una request de creación de producto con datos faltantes desde Postman.
 - Se creó la bitácora de aprendizaje y el glosario acumulativo.
+- Se documentó el flujo de Git: working directory, staging, commit, push,
+  `origin/main`, branches, `switch`, `switch -c`, `merge`, `branch -d` y
+  upstream mediante `-u`.
+- Se mejoró la presentación del repositorio con una descripción, alcance
+  actual, tecnologías, estructura y forma de ejecución local.
 
 ## Estado técnico conocido
 
@@ -23,11 +28,9 @@ El manejo de errores funciona como una primera versión educativa: el flujo trab
 
 - Refinar el middleware para distinguir errores de request (`400`) de errores internos (`500`) y de otros casos cuando existan en el proyecto.
 - Completar y validar el CRUD de productos: crear, listar, consultar por ID, actualizar y eliminar.
-- Confirmar las validaciones de nombre/SKU, SKU único, `Price > 0` y `Stock >= 0`.
+- Confirmar y ampliar las validaciones de nombre/SKU, SKU único y precio no
+  negativo (`Price >= 0`); el stock todavía no forma parte del modelo actual.
 - Validar la persistencia con SQL Server y EF Core.
 - Añadir pruebas proporcionales al riesgo y documentar la ejecución local.
-- Revisar el resultado completo y realizar un commit descriptivo cuando el checkout del proyecto esté disponible.
-
-## Límites de esta actualización
-
-En el entorno actual no se encontró un checkout editable del repositorio ProGear MX; solo había artefactos de compilación. Por ello, este archivo distingue el estado respaldado por la conversación y el charter del proyecto de aquello que queda pendiente de verificación local. No se afirma aquí que el código fuente, la base de datos o las pruebas estén presentes en este espacio de trabajo.
+- Revisar el resultado completo y realizar un commit descriptivo cuando se
+  confirme que todos los cambios están listos.

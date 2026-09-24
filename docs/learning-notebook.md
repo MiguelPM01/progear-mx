@@ -431,6 +431,18 @@ foreach / API
 | SDK | kit de desarrollo |
 | serialize / deserialize | convertir a JSON / convertir desde JSON |
 | persistence | persistencia |
+| working directory / working tree | carpeta con los archivos de trabajo actuales |
+| staging area | área donde se preparan cambios antes del commit |
+| commit | registro de cambios en el repositorio local |
+| push | envío de commits al repositorio remoto |
+| remote / origin | repositorio externo configurado / nombre habitual del remoto principal |
+| main | rama principal del repositorio |
+| origin/main | referencia local al estado conocido de `main` en `origin` |
+| branch | rama o línea independiente de desarrollo |
+| switch | cambiar de rama |
+| switch -c | crear una rama y cambiar a ella |
+| merge | integrar los commits de una rama en otra |
+| upstream / `-u` | vínculo entre la rama local y su rama remota correspondiente |
 
 ---
 
@@ -561,9 +573,36 @@ Se implementó y probó el flujo básico de `ErrorHandlingMiddleware` para el ca
 
 La comprensión no apareció al memorizar la definición de middleware, sino al conectar el flujo completo: request, `_next(context)`, excepción, `catch`, `ErrorResponse`, serialización y response. La distinción entre el contexto HTTP completo y los datos específicos de una operación fue el aprendizaje más importante de la sesión.
 
-## Nota técnica
+---
 
-La nota anterior conserva la experiencia y las confusiones de la sesión. Los detalles de implementación se mantienen separados dentro de esta misma entrada para que la bitácora no se convierta únicamente en documentación técnica.
+## Sesión — 24 de septiembre de 2026
+
+### Git: ramas, historial y sincronización
+
+**Términos en inglés:** working directory, staging area, commit, push, origin, main, branch, switch, merge, upstream.
+
+**Explicación sencilla:** El working directory es donde están los archivos que estoy modificando. `git add` lleva cambios al staging area; `git commit` los registra en el repositorio local; `git push` envía commits al repositorio remoto. `origin/main` representa la referencia local a la rama `main` del remoto llamado `origin`.
+
+**Cómo lo razoné:** La comparación que me ayudó fue pensar en un árbol: el repositorio es el historial, una branch es una rama o línea de desarrollo, un commit es un punto nuevo en esa línea y un merge integra una rama en otra.
+
+**Ejemplo:**
+
+~~~powershell
+git status
+git add docs/learning-notebook.md
+git commit -m "docs: update learning notes"
+git push -u origin main
+git switch main
+git switch -c feature/nueva-funcionalidad
+git merge feature/nueva-funcionalidad
+git branch -d feature/nueva-funcionalidad
+~~~
+
+**Error o duda:** Al principio confundí `git add` con guardar el cambio en el repositorio. También estaba entendiendo por qué una rama nueva puede salir de la rama actual y cómo se relacionan `main`, `origin/main` y el remoto.
+
+**Qué aprendí:** `git add` prepara, `commit` registra localmente y `push` sincroniza con GitHub. `git switch` cambia de rama; `git switch -c` crea una rama y cambia a ella. `merge` integra el trabajo de una rama. `branch -d` elimina una rama local ya integrada. `-u` o `--set-upstream` vincula la rama local con su rama remota para simplificar futuros `push` y `pull`.
+
+**Idea principal:** No necesitamos crear todas las ramas desde el inicio. Se crean cuando existe una necesidad real de separar una funcionalidad, una corrección o un experimento.
 
 ---
 
