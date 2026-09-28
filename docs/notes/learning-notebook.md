@@ -606,11 +606,154 @@ git branch -d feature/nueva-funcionalidad
 
 ---
 
-## Futuras sesiones
+# Sesión - 28 de septiembre de 2026
 
-- [ ] Crear y revisar productos.json.
-- [ ] Usar System.Text.Json para deserializar a List<Producto>.
-- [ ] Leer el archivo desde la aplicación.
-- [ ] Conectar la lista cargada con un endpoint de productos.
-- [ ] Validar las reglas de negocio de nombre, SKU y precio.
-- [ ] Registrar nuevos aprendizajes, errores y razonamientos con esta misma estructura.
+## Tema
+
+Modelado de base de datos para ProGear MX.
+
+## Objetivo
+
+Pasar de las reglas de negocio previamente definidas a un modelo conceptual y posteriormente a un ERD utilizando DBDiagram.
+
+---
+
+## Decisiones tomadas
+
+### Producto
+
+Se definió como entidad:
+
+- Id
+- Nombre
+- Marca
+- SKU
+
+La marca forma parte del producto porque dos productos pueden tener el mismo nombre pero pertenecer a diferentes marcas.
+
+Ejemplo:
+
+- Multímetro Fluke
+- Multímetro Klein Tools
+- Multímetro Steren
+
+Aunque tengan una función similar, son productos diferentes.
+
+El SKU es único.
+
+---
+
+### Inventario
+
+Se decidió separar Inventario de Producto.
+
+Inventario contiene:
+
+- Id
+- IdProducto
+- Existencia
+- Reservado
+
+No contiene información de precios.
+
+La disponibilidad se calcula:
+
+`Disponible = Existencia - Reservado`
+
+No se almacena `Disponible`.
+
+---
+
+### Producto e Inventario
+
+La relación es:
+
+`Producto 1 : 0..1 Inventario`
+
+Esto significa que un producto puede no tener todavía un registro de inventario o puede tener exactamente uno.
+
+Se distinguió entre:
+
+**Sin registro de inventario:**
+
+El producto existe en el catálogo, pero todavía no se ha registrado existencia física.
+
+**Inventario con existencia 0:**
+
+El producto sí tiene un registro de inventario, pero actualmente no quedan unidades.
+
+Por lo tanto:
+
+`ausencia de registro != existencia = 0`
+
+---
+
+### Historial de precios
+
+Se creó la entidad `HistorialPrecio`:
+
+- Id
+- IdProducto
+- Precio
+- FechaInicio
+- FechaFin
+
+Relación:
+
+`Producto 1 : 0..N HistorialPrecio`
+
+Un producto puede no tener precio todavía, tener uno o tener múltiples precios históricos.
+
+Ejemplo:
+
+- $1,200
+- $1,299
+- $1,400
+
+`FechaFin = NULL` representa el precio actualmente vigente.
+
+---
+
+## Cardinalidades estudiadas
+
+### 0..1
+
+Cero o uno.
+
+En ProGear MX:
+
+`Producto 1 : 0..1 Inventario`
+
+Un producto puede tener cero o un registro de inventario.
+
+### 0..N
+
+Cero o muchos.
+
+En ProGear MX:
+
+`Producto 1 : 0..N HistorialPrecio`
+
+Un producto puede tener cero, uno o múltiples registros históricos.
+
+---
+
+## ERD
+
+El modelo fue trasladado a DBML y visualizado en DBDiagram.
+
+Archivos relacionados:
+
+- `progear-mx.dbml`
+- `progear-mx-erd.png`
+
+---
+
+## Principios aplicados
+
+- No mezclar responsabilidades entre entidades.
+- No almacenar datos derivados innecesariamente.
+- No utilizar `0` para representar ausencia de información.
+- Mantener trazabilidad histórica cuando el negocio lo requiere.
+- Diseñar primero a partir de reglas del negocio.
+- Mantener el modelo suficientemente simple para el MVP.

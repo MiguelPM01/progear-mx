@@ -20,17 +20,93 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 - Se mejoró la presentación del repositorio con una descripción, alcance
   actual, tecnologías, estructura y forma de ejecución local.
 
-## Estado técnico conocido
+## Estado actual
 
-El manejo de errores funciona como una primera versión educativa: el flujo trabajado representa la excepción como `400 Bad Request`. Esto no debe considerarse la clasificación definitiva de errores de la API.
+**Fase:** Modelado de dominio y base de datos
 
-## Pendientes relevantes
+**Estado:** En progreso
 
-- Refinar el middleware para distinguir errores de request (`400`) de errores internos (`500`) y de otros casos cuando existan en el proyecto.
-- Completar y validar el CRUD de productos: crear, listar, consultar por ID, actualizar y eliminar.
-- Confirmar y ampliar las validaciones de nombre/SKU, SKU único y precio no
-  negativo (`Price >= 0`); el stock todavía no forma parte del modelo actual.
-- Validar la persistencia con SQL Server y EF Core.
-- Añadir pruebas proporcionales al riesgo y documentar la ejecución local.
-- Revisar el resultado completo y realizar un commit descriptivo cuando se
-  confirme que todos los cambios están listos.
+---
+
+## Completado
+
+### Configuración inicial
+
+- [x] Crear solución .NET
+- [x] Crear proyecto ASP.NET Core
+- [x] Configurar solución
+- [x] Ejecutar API
+- [x] Crear repositorio Git
+- [x] Conectar repositorio con GitHub
+
+### API inicial
+
+- [x] Crear modelo Producto
+- [x] Crear DTO para creación de Producto
+- [x] Crear GET `/productos`
+- [x] Crear GET `/productos/{id}`
+- [x] Crear POST `/productos`
+- [x] Validar nombre
+- [x] Validar SKU
+- [x] Validar SKU duplicado
+- [x] Validar precio
+- [x] Implementar respuestas de error
+- [x] Implementar middleware global de errores
+- [x] Probar errores 400, 404 y 500
+- [x] Probar creación exitosa de producto
+
+### Git
+
+- [x] Practicar `git status`
+- [x] Practicar `git diff`
+- [x] Practicar `git add`
+- [x] Practicar `git diff --staged`
+- [x] Practicar `git commit`
+- [x] Practicar `git push`
+- [x] Entender Working Directory
+- [x] Entender Staging
+- [x] Entender Local Repository
+- [x] Entender Remote Repository
+
+### Modelado
+
+- [x] Identificar entidades
+- [x] Separar entidades de atributos
+- [x] Definir Producto
+- [x] Definir Inventario
+- [x] Definir HistorialPrecio
+- [x] Definir relaciones
+- [x] Definir cardinalidades
+- [x] Definir reglas de inventario
+- [x] Definir historial de precios
+- [x] Crear DBML
+- [x] Crear ERD en DBDiagram
+- [x] Guardar DBML en el repositorio
+- [x] Guardar ERD en PNG
+
+---
+
+## Próximo bloque
+
+### Base de datos
+
+- [ ] Revisar reglas de integridad
+- [ ] Crear esquema SQL Server
+- [ ] Crear tablas
+- [ ] Definir restricciones
+- [ ] Revisar índices
+- [ ] Configurar EF Core
+- [ ] Crear entidades persistentes
+- [ ] Crear DbContext
+- [ ] Ejecutar migraciones
+- [ ] Sustituir almacenamiento en memoria por SQL Server
+
+---
+
+## Principio de trabajo
+
+Construir antes que perfeccionar.
+
+Cada bloque seguirá:
+
+`Requerimiento → Diseño → Implementación → Prueba → Revisión → Documentación → Commit`

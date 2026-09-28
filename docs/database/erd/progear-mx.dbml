@@ -1,0 +1,25 @@
+Table  Producto{
+  Id int [pk, increment]
+  Nombre varchar
+  Marca varchar
+  SKU varchar [unique]
+}
+
+Table Inventario{
+  Id int [pk, increment]
+  IdProducto int [unique]
+  Existencia int
+  Reservado int
+}
+
+Table HistorialPrecio{
+  Id int [pk, increment]
+  IdProducto int
+  Precio decimal
+  FechaInicio datetime
+  FechaFin datetime
+}
+
+Ref: Producto.Id - Inventario.IdProducto
+
+Ref: Producto.Id < HistorialPrecio.IdProducto

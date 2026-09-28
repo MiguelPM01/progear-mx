@@ -38,3 +38,25 @@
 | `409 Conflict` | Respuesta usada cuando existe un conflicto con el estado actual del recurso. |
 | `500 Internal Server Error` | Respuesta usada para un error interno del servidor. |
 | Registro del middleware | Incorporación del middleware al pipeline, por ejemplo con `app.UseMiddleware<T>()`. |
+| Entity | Elemento del dominio que necesita ser representado y almacenado, Ejemplos `Producto, Inventario, HistorialPrecio`. |
+| Atributo | Dato que describe una cantidad, ejemplos `Producto.Nombre, Producto.Marca, Producto.SKU` .|
+|Primary Key (PK) | Campo que identifica de manera única un registro dentro de una tabla, Ejemplo `Producto.Id`. |
+| Foreign Key (FK) | Campo que referencia la Primary Key de otra tabla y permite establecer una relación entre entidades, Ejemplo `Inventario.IdProducto -> Producto.Id`. |
+| Cardinalidad | Describe cuántos registros de una entidad pueden relacionarse una con otra. |
+| `0..1` | Cero o uno. |
+| `1..1` | Exactamente uno. |
+| `0..N` | Cero o muchos. |
+| `1..N` | Uno o muchos. |
+| ERD (Entity Relationship Diagram ) | Diagrama que representa entidades, atributos y relaciones de una base de datos.
+| DBML (Database Markup Language) | Lenguaje utilizado por herramientas como DBDiagram para describir estructuras de bases de datos y sus relaciones. |
+| Inventario | Representa el estado de las existencias físicas de un producto. |
+| Existencia | Cantidad física registrada de un producto.
+| Reservado | Cantidad de unidades que forman parte de la existencia pero están comprometidas temporalmente para una operación, como una venta pendiente. |
+| Disponible | Cantidad que puede ser ofrecida para nuevas operaciones. se calcula: `Disponible = Existencia - Reservado` no se almacena directamente. |
+| Historial de precios | Conjunto de registros que permite conservar los diferentes precios que ha tenido un producto a través del tiempo. |
+| Precio Vigente | Precio cuyo período de vigencia todavía no ha terminado. |
+| NULL | Ausencia de un valor. |
+| Staging | Área de Git donde se seleccionan los cambios que formarán parte del siguiente commit. |
+| Commit | Registro de un conjunto de cambios dentro del repositorio local de Git.
+| Push | Operación que publica commits locales en el repositorio remoto. |
+| Working Directory | Estado de los archivos del proyecto sobre los que estamos trabajando antes de agregarlos al staging. |
