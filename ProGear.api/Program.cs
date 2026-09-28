@@ -53,7 +53,6 @@ var productos = new List<Producto>
     atornillador
 };
 
-
     app.MapGet("/productos", () =>
     {
         return productos;

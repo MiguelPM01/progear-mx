@@ -17,22 +17,44 @@ public class ErrorHandlingMiddleware
         {
             await _next(context);
         }
+        catch (BadHttpRequestException ex)
+        {
+            await WriteErrorResponse(
+                context,
+                ex.StatusCode,
+                "INVALID_REQUEST",
+                "La solicitud contiene datos inválidos."
+            );
+        }
         catch (Exception)
         {
-            context.Response.StatusCode = 400;
-            context.Response.ContentType = "application/json";
-
-            var error = new ErrorResponse
-            {
-                Exito = false,
-                Codigo = "INVALID_REQUEST",
-                Mensaje = "La solicitud contiene datos inválidos."
-            };
-
-            var json = JsonSerializer.Serialize(error);
-
-            await context.Response.WriteAsync(json);
+            await WriteErrorResponse(
+                context,
+                StatusCodes.Status500InternalServerError,
+                "INTERNAL_SERVER_ERROR",
+                "Ocurrió un error interno en el servidor."
+            );
         }
     }
-}
 
+    private static async Task WriteErrorResponse(
+        HttpContext context,
+        int StatusCode,
+        string codigo,
+        string mensaje)
+    {
+        context.Response.StatusCode = StatusCode;
+        context.Response.ContentType = "application/json";
+
+        var error = new ErrorResponse
+        {
+            Exito = false,
+            Codigo = codigo,
+            Mensaje = mensaje
+        };
+
+        var json = JsonSerializer.Serialize(error);
+
+        await context.Response.WriteAsync(json);
+    }
+}
