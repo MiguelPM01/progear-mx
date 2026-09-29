@@ -70,6 +70,17 @@ Un producto puede tener:
 - `FechaFin = NULL` representa el precio actualmente vigente.
 - No debe existir más de un precio vigente simultáneamente para un producto.
 
+### Reglas implementadas o validadas en la sesión del 2026-09-29
+
+Estas reglas quedaron expresadas y probadas en SQL Server durante la sesión. Su integración en la API queda pendiente.
+
+- Un cambio de precio debe cerrar el registro vigente y crear un nuevo registro histórico.
+- El registro anterior recibe `FechaFin = @MomentoCambio`.
+- El nuevo registro recibe `FechaInicio = @MomentoCambio` y `FechaFin = NULL`.
+- El cierre y la creación forman una sola transacción; si falla la operación, sus cambios deben poder revertirse con `ROLLBACK`.
+- Un índice único filtrado debe impedir más de un registro con `FechaFin IS NULL` para el mismo `IdProducto`.
+- El historial puede conservar varios registros con el mismo precio; la regla es la unicidad del precio vigente, no la unicidad histórica del valor.
+
 ---
 
 ## 5. Inventario

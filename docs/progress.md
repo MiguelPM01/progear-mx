@@ -26,6 +26,19 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 
 **Estado:** En progreso
 
+## Sesión documentada — 2026-09-29
+
+- [x] Expresar el precio vigente como `FechaFin IS NULL`.
+- [x] Relacionar la regla con `PRIMARY KEY`, `FOREIGN KEY`, `NOT NULL`, `UNIQUE`, `CHECK` y `DEFAULT`.
+- [x] Entender el índice único filtrado para impedir dos precios vigentes del mismo producto.
+- [x] Probar el cambio de precio como `UPDATE` + `INSERT` dentro de una transacción.
+- [x] Reutilizar `@MomentoCambio` para cerrar el precio anterior y abrir el nuevo con el mismo instante.
+- [x] Confirmar el resultado observado: precio anterior cerrado y nuevo precio con `FechaFin = NULL`.
+
+### Estado técnico real
+
+La sesión validó el flujo en SQL Server según la evidencia de la conversación. El checkout todavía no tiene persistencia integrada: `Program.cs` usa una `List<Producto>` en memoria y el modelo de base de datos está documentado en DBML. Aún falta versionar el esquema SQL y conectarlo mediante EF Core.
+
 ---
 
 ## Completado
@@ -90,7 +103,9 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 
 ### Base de datos
 
-- [ ] Revisar reglas de integridad
+- [x] Revisar reglas de integridad del modelo inicial
+- [x] Definir la regla de un único precio vigente mediante índice único filtrado
+- [x] Probar el cambio de precio con transacción en SQL Server
 - [ ] Crear esquema SQL Server
 - [ ] Crear tablas
 - [ ] Definir restricciones

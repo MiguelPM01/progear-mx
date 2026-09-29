@@ -60,3 +60,22 @@
 | Commit | Registro de un conjunto de cambios dentro del repositorio local de Git.
 | Push | Operación que publica commits locales en el repositorio remoto. |
 | Working Directory | Estado de los archivos del proyecto sobre los que estamos trabajando antes de agregarlos al staging. |
+| SQL Server | Sistema gestor de bases de datos relacionales usado como destino de persistencia de ProGear MX. |
+| T-SQL | Dialecto de SQL utilizado por SQL Server para declarar variables y controlar operaciones. |
+| Constraint / restricción | Regla que limita los datos permitidos en una tabla. |
+| `NOT NULL` | Restricción que exige que una columna tenga un valor. |
+| `UNIQUE` | Restricción que impide valores duplicados en una columna o combinación definida. |
+| `CHECK` | Restricción que exige que un valor cumpla una condición. |
+| `DEFAULT` | Valor que SQL Server asigna automáticamente cuando no se proporciona uno. |
+| `INDEX` / índice | Estructura que ayuda a buscar datos y puede reforzar una regla de unicidad. |
+| Índice único filtrado | Índice `UNIQUE` aplicado solo a filas que cumplen un filtro; aquí permite una sola fila con `FechaFin IS NULL` por producto. |
+| Transaction / transacción | Operación compuesta cuyos cambios se confirman juntos o se revierten juntos. |
+| `BEGIN TRANSACTION` | Inicia una transacción. |
+| `COMMIT TRANSACTION` | Confirma los cambios de una transacción. |
+| `ROLLBACK TRANSACTION` | Revierte los cambios de una transacción cuando la operación falla. |
+| `DECLARE` | Instrucción T-SQL para declarar una variable local. |
+| Variable T-SQL | Valor temporal identificado por un nombre, normalmente con prefijo `@`, que puede reutilizarse durante la operación. |
+| `DATETIME2` | Tipo de SQL Server para almacenar fecha y hora con precisión fraccionaria. |
+| `SYSDATETIME()` | Función que obtiene la fecha y hora actual del servidor SQL. |
+| `UPDATE` | Instrucción que modifica filas existentes. |
+| `INSERT` | Instrucción que agrega nuevas filas. |

@@ -757,3 +757,73 @@ Archivos relacionados:
 - Mantener trazabilidad histórica cuando el negocio lo requiere.
 - Diseñar primero a partir de reglas del negocio.
 - Mantener el modelo suficientemente simple para el MVP.
+
+---
+
+# Sesión — 29 de septiembre de 2026
+
+## Tema y objetivo
+
+SQL Server aplicado al modelo de productos, inventario e historial de precios. El objetivo fue convertir la regla “un producto solo puede tener un precio vigente” en una estructura protegida por la base de datos y en un flujo seguro para cambiar el precio.
+
+## Lo que construimos
+
+Partimos de una decisión del dominio: `FechaFin = NULL` representa el precio vigente. A partir de ahí:
+
+1. `HistorialPrecio` conserva cada período de precio en vez de sobrescribir el anterior.
+2. El precio anterior se cierra asignando `FechaFin`.
+3. El nuevo precio se inserta con `FechaFin = NULL`.
+4. Un índice único filtrado impide dos filas vigentes para el mismo producto.
+5. `UPDATE` e `INSERT` se ejecutan dentro de una transacción.
+
+También repasamos el papel de las restricciones: `PRIMARY KEY` identifica filas, `FOREIGN KEY` mantiene las relaciones, `NOT NULL` exige datos, `UNIQUE` evita duplicados, `CHECK` protege condiciones y `DEFAULT` puede completar valores automáticamente.
+
+## Duda y razonamiento sobre `@MomentoCambio`
+
+La duda fue si `DECLARE @MomentoCambio` guardaba el “cambio” de estado. La precisión importante fue que guarda **el instante exacto** del cambio. `DECLARE` crea una variable T-SQL, `DATETIME2` indica que almacenará fecha y hora, y `SYSDATETIME()` obtiene el momento actual del servidor SQL.
+
+La variable se captura una sola vez para reutilizar exactamente el mismo valor:
+
+~~~text
+@MomentoCambio
+      ├── FechaFin del precio anterior
+      └── FechaInicio del precio nuevo
+~~~
+
+Así no dependemos de dos llamadas distintas a `SYSDATETIME()` que podrían producir instantes ligeramente diferentes.
+
+## Flujo trabajado
+
+~~~sql
+BEGIN TRANSACTION;
+
+DECLARE @MomentoCambio DATETIME2 = SYSDATETIME();
+
+UPDATE HistorialPrecio
+SET FechaFin = @MomentoCambio
+WHERE IdProducto = 1
+  AND FechaFin IS NULL;
+
+INSERT INTO HistorialPrecio (IdProducto, Precio, FechaInicio, FechaFin)
+VALUES (1, 1600.00, @MomentoCambio, NULL);
+
+COMMIT TRANSACTION;
+~~~
+
+`BEGIN TRANSACTION` inicia la operación atómica. `COMMIT` confirma los cambios si todo salió bien. `ROLLBACK` sería la salida si una parte fallara. El resultado observado fue un registro de `$1500` cerrado y un registro de `$1600` vigente. También se observó que puede haber varios registros históricos con el mismo precio; lo relevante es que solo uno tenga `FechaFin = NULL`.
+
+## Qué aprendí
+
+- Una regla de negocio puede traducirse en una restricción y en un flujo de escritura.
+- `NULL` puede tener significado de dominio: “vigente actualmente”.
+- El historial conserva trazabilidad; cambiar una fila no sustituye registrar el nuevo período.
+- Una transacción protege el cambio compuesto de cerrar y abrir precio.
+- La base de datos puede ayudar a impedir estados inválidos, no solo almacenar datos.
+
+## Evidencia y límite
+
+La conversación de la sesión reporta que el flujo se ejecutó y se observó en SQL Server. En el checkout actual, la API todavía usa una `List<Producto>` en memoria y el modelo persistente está representado por DBML; aún no hay esquema SQL versionado, `DbContext` ni prueba automatizada desde la API.
+
+## Cierre
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.
