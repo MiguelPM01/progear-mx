@@ -1,65 +1,29 @@
+using Microsoft.EntityFrameworkCore;
+using ProGear.Api.Data;
+
 using ProGear.Api;
+using ProGear.Api.Models;
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ProGearDbContext>(options =>
+options.UseSqlServer(
+    builder.Configuration.GetConnectionString("ProGear")
+));
+
 var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-var taladro = new Producto
-{
-    Id = 1,
-    Nombre = "Taladro inalámbrico",
-    Sku = "TAL-058",
-    Precio = 1299.00m  
-};
-
-var esmeril = new Producto
-{
-    Id = 2,
-    Nombre = "Esmeriladora Angular inalámbrica de 5 pulgadas",
-    Sku = "ESM-215",
-    Precio = 1741.00m
-};
-
-var llaveImpacto = new Producto
-{
-    Id = 3,
-  Nombre = "Llave de impacto",
-  Sku = "IMP-005",
-  Precio = 1099.99m  
-};
-
-var multimetro = new Producto
-{
-    Id = 4,
-    Nombre = "Multímetro digital",
-    Sku = "MUL-895",
-    Precio = 899.99m
-};
-
-var atornillador = new Producto
-{
-    Id = 5,
-  Nombre = "Atornillador de impacto inalámbrico sin escobillas",
-  Sku = "ATI-298",
-  Precio = 999.99m  
-};
-
-var productos = new List<Producto>
-{
-    taladro,
-    esmeril,
-    llaveImpacto,
-    multimetro,
-    atornillador
-};
-
-    app.MapGet("/productos", () =>
+/*---Configuración de las rutas GET para solicitar información de productos en la base de datos a través de la API.---*/
+    app.MapGet("/productos", async (ProGearDbContext context) =>
     {
-        return productos;
+       var productos = await context.Productos.ToListAsync();
+
+       return Results.Ok(productos);
+
     });
 
-
-    app.MapGet("/productos/{id}", (int id) =>
+    app.MapGet("/productos/{id}",  async (int id, ProGearDbContext context) =>
     {
         if (id <= 0)
             {
@@ -70,11 +34,11 @@ var productos = new List<Producto>
                     Mensaje = "El identificador del producto debe ser mayor que cero."
                 });
             }
-        var producto = productos.Find(p => p.Id == id);
+        var productos = await context.Productos.FindAsync(id);
 
-        if(producto != null)
+        if(productos != null)
         {
-            return Results.Ok(producto);
+            return Results.Ok(productos);
         }
         else
         {
@@ -87,9 +51,8 @@ var productos = new List<Producto>
         }
     });
 
-    int siguienteId = 6;
-
-    app.MapPost("/productos", (CrearProductoRequest request) =>
+/*---Configuración de la ruta POST para crear nuevos productos en la base de datos a través de la API.---*/
+    app.MapPost("/productos", async (CrearProductoRequest request, ProGearDbContext context) =>
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
         {
@@ -111,7 +74,7 @@ var productos = new List<Producto>
             });
         }
 
-        if (productos.Exists(p => p.Sku == request.Sku))
+        if (await context.Productos.AnyAsync(p => p.Sku == request.Sku))
         {
             return Results.Conflict(new ErrorResponse
             {
@@ -121,26 +84,18 @@ var productos = new List<Producto>
             });
         }
 
-        if (request.Precio < 0)
-        {
-            return Results.BadRequest(new ErrorResponse
-            {
-                Exito = false,
-                Codigo = "INVALID_PRODUCT_PRICE",
-                Mensaje = "El precio del producto no puede ser menor que cero."
-            });
-        }
+       
 
         var producto = new Producto
         {
-          Id = siguienteId,
           Nombre = request.Nombre,
+          Marca = request.Marca,
           Sku = request.Sku,
-          Precio = request.Precio
         };
 
-        productos.Add(producto);
-        siguienteId++;
+        context.Productos.Add(producto);
+
+        await context.SaveChangesAsync();
 
         return Results.Created($"/productos/{producto.Id}", producto);
 
@@ -148,3 +103,12 @@ var productos = new List<Producto>
 
 app.Run();
 
+ /*if (request.Precio < 0)
+        {
+            return Results.BadRequest(new ErrorResponse
+            {
+                Exito = false,
+                Codigo = "INVALID_PRODUCT_PRICE",
+                Mensaje = "El precio del producto no puede ser menor que cero."
+            });
+        }*/

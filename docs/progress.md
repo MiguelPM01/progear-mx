@@ -19,12 +19,52 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
   upstream mediante `-u`.
 - Se mejoró la presentación del repositorio con una descripción, alcance
   actual, tecnologías, estructura y forma de ejecución local.
+- Se conectó la API a SQL Server mediante Entity Framework Core.
+- Se configuró `ProGearDbContext` y el mapeo de `Producto`, `Inventario` e
+  `HistorialPrecio` mediante `OnModelCreating`.
+- Se sustituyó la consulta en memoria por `ToListAsync()` para el GET general y
+  `FindAsync(id)` para la consulta por identificador.
+- Se actualizó la creación de productos para usar `Add` y `SaveChangesAsync()`;
+  SQL Server genera el identificador mediante `IDENTITY`.
+- Se eliminó la lista local de productos y `siguienteId`.
+- Se verificaron casos válidos y de error desde Postman, navegador y consultas
+  directas a SQL Server, comprobando que los resultados coinciden.
 
 ## Estado actual
 
 **Fase:** Modelado de dominio y base de datos
 
 **Estado:** En progreso
+
+La persistencia básica del catálogo de productos ya está funcionando. El
+trabajo pendiente se concentra en las operaciones específicas de inventario,
+historial de precios y las pruebas automatizadas correspondientes.
+
+## Sesión documentada — 2026-10-01
+
+- [x] Conectar ASP.NET Core a SQL Server mediante EF Core.
+- [x] Configurar `ProGearDbContext` y `OnModelCreating` para las entidades
+  actuales.
+- [x] Consultar productos desde SQL Server con `ToListAsync()` y
+  `FindAsync(id)`.
+- [x] Crear productos con `Add` y `SaveChangesAsync()`.
+- [x] Confirmar que SQL Server genera los identificadores mediante `IDENTITY`.
+- [x] Eliminar la lista de productos en memoria y `siguienteId`.
+- [x] Probar creación válida, SKU duplicado, nombre vacío, SKU vacío y request
+  incompleto.
+- [x] Comparar resultados entre Postman, navegador y consultas directas a SQL
+  Server.
+
+### Aprendizajes confirmados
+
+- `async` permite que una operación se ejecute de forma asíncrona y `await`
+  espera su resultado.
+- `try/catch` permite manejar excepciones.
+- `Add` agrega la entidad al seguimiento de EF Core y `SaveChangesAsync()` hace
+  persistentes los cambios.
+- EF Core traduce expresiones de C# a consultas SQL.
+- `DbContext` funciona como contexto y mapa entre los modelos de la aplicación
+  y la base de datos.
 
 ## Sesión documentada — 2026-09-29
 
@@ -37,7 +77,11 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 
 ### Estado técnico real
 
-La sesión validó el flujo en SQL Server según la evidencia de la conversación. El checkout todavía no tiene persistencia integrada: `Program.cs` usa una `List<Producto>` en memoria y el modelo de base de datos está documentado en DBML. Aún falta versionar el esquema SQL y conectarlo mediante EF Core.
+La API ya tiene persistencia básica del catálogo integrada con SQL Server y EF
+Core. `Program.cs` usa `ProGearDbContext` para consultar y crear productos; la
+lista local y `siguienteId` ya no forman parte del flujo. `Inventario` y
+`HistorialPrecio` tienen modelo y mapeo, pero todavía no tienen operaciones
+específicas implementadas en la API.
 
 ---
 
@@ -67,6 +111,8 @@ La sesión validó el flujo en SQL Server según la evidencia de la conversació
 - [x] Implementar middleware global de errores
 - [x] Probar errores 400, 404 y 500
 - [x] Probar creación exitosa de producto
+- [x] Persistir productos en SQL Server mediante EF Core
+- [x] Generar identificadores con SQL Server `IDENTITY`
 
 ### Git
 
@@ -110,11 +156,12 @@ La sesión validó el flujo en SQL Server según la evidencia de la conversació
 - [ ] Crear tablas
 - [ ] Definir restricciones
 - [ ] Revisar índices
-- [ ] Configurar EF Core
-- [ ] Crear entidades persistentes
-- [ ] Crear DbContext
+- [x] Configurar EF Core
+- [x] Crear entidades persistentes
+- [x] Crear DbContext
 - [ ] Ejecutar migraciones
-- [ ] Sustituir almacenamiento en memoria por SQL Server
+- [x] Sustituir almacenamiento en memoria por SQL Server para productos
+- [ ] Implementar operaciones de Inventario e HistorialPrecio en la API
 
 ---
 

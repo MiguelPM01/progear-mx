@@ -50,6 +50,14 @@ El sistema debe permitir:
 - El precio no se almacenará directamente en Producto.
 - El precio vigente se obtiene del historial de precios.
 
+### Estado de implementación — 2026-10-01
+
+El vertical actual de productos ya está conectado a SQL Server mediante Entity
+Framework Core. La API permite consultar todos los productos, consultar uno por
+identificador y crear productos. La creación valida nombre, SKU y SKU duplicado;
+el identificador lo genera SQL Server. Las operaciones específicas de
+`Inventario` e `HistorialPrecio` todavía no están expuestas por la API.
+
 ---
 
 ## 4. Historial de precios

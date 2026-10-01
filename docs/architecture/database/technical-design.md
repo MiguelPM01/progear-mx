@@ -2,7 +2,11 @@
 
 ## Propósito y estado
 
-Este documento inicia la documentación técnica de `Producto`, `Inventario` e `HistorialPrecio`. El modelo conceptual está en `docs/database/erd/progear-mx.dbml`. La API todavía usa almacenamiento en memoria; SQL Server y EF Core son la siguiente etapa. Por ello, aquí se documenta el diseño y el flujo SQL validado en la sesión del 2026-09-29, sin afirmar que ya exista una migración o un `DbContext` implementado.
+Este documento describe la documentación técnica de `Producto`, `Inventario` e
+`HistorialPrecio`. El modelo conceptual está en `docs/database/erd/progear-mx.dbml`.
+La API ya usa SQL Server mediante Entity Framework Core para las operaciones
+básicas de productos. Todavía no existe una migración documentada aquí y las
+operaciones específicas de inventario e historial de precios siguen pendientes.
 
 ## Entidades y relaciones
 
@@ -25,6 +29,24 @@ La ausencia de fila no equivale a `Existencia = 0`: el primer caso significa que
 ### HistorialPrecio
 
 `IdProducto` es clave foránea hacia `Producto`. `FechaInicio` marca el comienzo de vigencia y `FechaFin` su final. `FechaFin = NULL` significa que el precio sigue vigente.
+
+## Persistencia actual con EF Core
+
+`ProGearDbContext` expone `DbSet` para las tres entidades y configura sus
+tablas, claves, relaciones, longitudes, obligatoriedad, unicidad y precisión
+decimal en `OnModelCreating`.
+
+La API usa actualmente este flujo para productos:
+
+1. `ToListAsync()` consulta todos los productos en SQL Server.
+2. `FindAsync(id)` busca un producto por su clave primaria.
+3. `Add()` agrega un producto nuevo al seguimiento de EF Core.
+4. `SaveChangesAsync()` persiste el cambio.
+5. SQL Server genera el `Id` mediante `IDENTITY`.
+
+La lista local de productos y el identificador manual fueron eliminados. Las
+operaciones de `Inventario` e `HistorialPrecio` aún no están implementadas como
+endpoints.
 
 ## Constraints e índice único filtrado
 
@@ -73,7 +95,7 @@ COMMIT TRANSACTION;
 
 ## Pendientes explícitos
 
-- Crear el esquema SQL Server versionado.
+- Crear o documentar el esquema SQL Server versionado y las migraciones.
 - Definir en SQL los `CHECK`, `DEFAULT` y el índice único filtrado.
-- Configurar EF Core, entidades persistentes y `DbContext`.
+- Implementar las operaciones de `Inventario` e `HistorialPrecio`.
 - Probar desde la API el cambio de precio y sus casos de error.

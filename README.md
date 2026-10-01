@@ -8,25 +8,29 @@ creación mientras se construye una base sólida de ingeniería de software.
 
 ## Estado actual
 
-La API trabaja actualmente con productos en memoria. Ya cuenta con:
+La API trabaja actualmente con productos persistidos en SQL Server mediante
+Entity Framework Core. Ya cuenta con:
 
 - consulta de todos los productos: `GET /productos`;
 - consulta por identificador: `GET /productos/{id}`;
 - creación validada: `POST /productos`;
 - validación de nombre y SKU no vacíos;
-- validación de SKU duplicado y precio no negativo;
+- validación de SKU duplicado;
 - manejo inicial de errores mediante middleware.
 
-La persistencia con SQL Server y Entity Framework Core es el siguiente paso
-del proyecto. Ventas, autenticación, frontend y otras capacidades quedan
-fuera del vertical actual.
+La lista local de productos y el identificador manual fueron eliminados. La
+API ya consulta e inserta productos en la base de datos; SQL Server genera el
+identificador mediante `IDENTITY`. Inventario e historial de precios ya tienen
+modelos y mapeos en EF Core, pero sus operaciones específicas todavía no forman
+parte del vertical implementado. Ventas, autenticación, frontend y otras
+capacidades quedan fuera del vertical actual.
 
 ## Tecnologías
 
 - .NET 10 / ASP.NET Core Minimal API
 - C#
 - Git y GitHub
-- SQL Server y Entity Framework Core (siguiente etapa)
+- SQL Server y Entity Framework Core
 
 ## Estructura
 

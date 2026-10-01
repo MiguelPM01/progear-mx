@@ -827,3 +827,69 @@ La conversación de la sesión reporta que el flujo se ejecutó y se observó en
 ## Cierre
 
 Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+
+## Sesión — 1 de octubre de 2026
+
+### Tema y objetivo
+
+Conectar el catálogo de productos de ProGear MX a SQL Server mediante Entity
+Framework Core y comprobar que la API, la base de datos y las herramientas de
+consulta muestran el mismo estado.
+
+### Lo que construimos
+
+- `ProGearDbContext` quedó configurado para trabajar con `Producto`,
+  `Inventario` e `HistorialPrecio`.
+- `OnModelCreating` mapea tablas, claves, relaciones, longitudes, obligatoriedad,
+  unicidad y precisión decimal.
+- `GET /productos` consulta SQL Server con `ToListAsync()`.
+- `GET /productos/{id}` busca por clave primaria con `FindAsync(id)`.
+- `POST /productos` recibe `CrearProductoRequest`, valida nombre, SKU y SKU
+  duplicado con `AnyAsync()`, agrega el producto con `Add()` y persiste con
+  `SaveChangesAsync()`.
+- Se eliminó la lista local de productos y `siguienteId`.
+- SQL Server genera el identificador mediante `IDENTITY`.
+
+### Pruebas y experiencia
+
+Se verificó una creación válida y la generación de los identificadores 6 y 7.
+También se probaron un SKU duplicado, un nombre vacío, un SKU vacío y una
+request incompleta. Los resultados coincidieron al revisar la API desde
+Postman, el navegador y consultas directas a SQL Server.
+
+### Conceptos aprendidos o confirmados
+
+**Términos en inglés:** `async`, `await`, `try/catch`, `Add`,
+`SaveChangesAsync`, Entity Framework Core, `DbContext`, `ToListAsync`,
+`FindAsync`, `AnyAsync`, `IDENTITY`.
+
+**Explicación sencilla:** `async` permite trabajar con operaciones asíncronas y
+`await` espera su resultado. `try/catch` permite manejar excepciones. EF Core
+traduce expresiones de C# a SQL; `DbContext` funciona como contexto y mapa entre
+los modelos y la base de datos. `Add` deja una entidad en seguimiento y
+`SaveChangesAsync` persiste los cambios. SQL Server genera el `Id` porque la
+columna está configurada con `IDENTITY`.
+
+**Cómo lo razoné:** La diferencia principal frente a la etapa anterior fue
+comprobar que la API ya no busca en una lista limitada en memoria. Al consultar
+con `FindAsync(id)`, el endpoint apunta a la tabla de SQL Server y puede
+encontrar registros que no estaban en aquella lista. Después confirmé que la
+creación también llega a la base de datos y que el identificador no se asigna
+manualmente.
+
+**Duda o error que ayudó a aprender:** El problema del sexto producto se
+explicó porque el endpoint todavía buscaba en una lista que solo tenía cinco
+elementos. Cambiarlo a `FindAsync(id)` alineó la consulta por identificador con
+el GET general, que ya consultaba SQL Server.
+
+### Límite de la sesión
+
+Aunque `Inventario` e `HistorialPrecio` ya tienen modelos y mapeos en
+`ProGearDbContext`, no se avanzó en implementar sus operaciones. Ese trabajo
+queda pendiente.
+
+### Cierre
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.

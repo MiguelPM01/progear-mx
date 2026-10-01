@@ -79,3 +79,16 @@
 | `SYSDATETIME()` | Función que obtiene la fecha y hora actual del servidor SQL. |
 | `UPDATE` | Instrucción que modifica filas existentes. |
 | `INSERT` | Instrucción que agrega nuevas filas. |
+| `async` | Modificador de C# que permite que un método realice operaciones asíncronas y pueda usar `await`. |
+| `await` | Expresión de C# que espera el resultado de una operación asíncrona. |
+| `DbContext` | Contexto de EF Core que conecta los modelos de la aplicación con la base de datos y coordina la persistencia. |
+| `DbSet` | Colección de EF Core que representa una entidad y permite consultar o seguir sus registros. |
+| `OnModelCreating` | Método donde se configura cómo las entidades se mapean a tablas, claves, relaciones y propiedades de la base de datos. |
+| Entity Framework Core (EF Core) | Framework de .NET que permite trabajar con la base de datos usando modelos y expresiones de C#. |
+| `ToListAsync()` | Método de EF Core que ejecuta una consulta asíncrona y devuelve sus resultados como una lista. |
+| `FindAsync()` | Método de EF Core que busca una entidad por su clave primaria de forma asíncrona. |
+| `AnyAsync()` | Método de EF Core que comprueba de forma asíncrona si existe al menos un registro que cumple una condición. |
+| `Add()` | Operación de EF Core que agrega una entidad al seguimiento del `DbContext` para prepararla para persistencia. |
+| `SaveChangesAsync()` | Método de EF Core que persiste de forma asíncrona los cambios seguidos por el `DbContext`. |
+| `IDENTITY` | Configuración de SQL Server que genera automáticamente valores numéricos para una columna, como el `Id` de Producto. |
+| Traducción de expresiones a SQL | Proceso mediante el cual EF Core convierte expresiones de C# en consultas SQL que ejecuta la base de datos. |
