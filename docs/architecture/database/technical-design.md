@@ -5,8 +5,9 @@
 Este documento describe la documentación técnica de `Producto`, `Inventario` e
 `HistorialPrecio`. El modelo conceptual está en `docs/database/erd/progear-mx.dbml`.
 La API ya usa SQL Server mediante Entity Framework Core para las operaciones
-básicas de productos. Todavía no existe una migración documentada aquí y las
-operaciones específicas de inventario e historial de precios siguen pendientes.
+básicas de productos y para consultar el historial de precios. Todavía no
+existe una migración documentada aquí; el cambio de precio y las operaciones
+específicas de inventario siguen pendientes.
 
 ## Entidades y relaciones
 
@@ -30,6 +31,11 @@ La ausencia de fila no equivale a `Existencia = 0`: el primer caso significa que
 
 `IdProducto` es clave foránea hacia `Producto`. `FechaInicio` marca el comienzo de vigencia y `FechaFin` su final. `FechaFin = NULL` significa que el precio sigue vigente.
 
+La entidad se mapea en `OnModelCreating` con `HasKey(h => h.Id)`,
+`HasPrecision(10, 2)` para `Precio` y
+`HasOne<Producto>().WithMany().HasForeignKey(h => h.IdProducto)`. Esto expresa
+la cardinalidad `Producto 1 : 0..N HistorialPrecio`.
+
 ## Persistencia actual con EF Core
 
 `ProGearDbContext` expone `DbSet` para las tres entidades y configura sus
@@ -44,9 +50,25 @@ La API usa actualmente este flujo para productos:
 4. `SaveChangesAsync()` persiste el cambio.
 5. SQL Server genera el `Id` mediante `IDENTITY`.
 
-La lista local de productos y el identificador manual fueron eliminados. Las
-operaciones de `Inventario` e `HistorialPrecio` aún no están implementadas como
-endpoints.
+La lista local de productos y el identificador manual fueron eliminados.
+
+## Consultas actuales de HistorialPrecio
+
+La API expone dos consultas de solo lectura:
+
+| Endpoint | Consulta EF Core | Respuesta exitosa |
+|---|---|---|
+| `GET /productos/{id}/precios/historial` | `Where(h => h.IdProducto == id).ToListAsync()` | `200` con colección; `[]` si está vacía |
+| `GET /productos/{id}/precio` | `Where(h => h.IdProducto == id && h.FechaFin == null).SingleOrDefaultAsync()` | `200` con un registro o `null` |
+
+Ambos endpoints devuelven `400` para un identificador no mayor que cero y
+`404` si el producto no existe. `SingleOrDefaultAsync()` espera cero o un
+registro: devuelve `null` sin coincidencias y señala un estado inconsistente
+si encuentra más de uno. La consulta de historial materializa una colección,
+por lo que cero resultados se representan como `[]`.
+
+Estas operaciones no implementan todavía el cambio de precio mediante
+transacción ni modifican `HistorialPrecio`.
 
 ## Constraints e índice único filtrado
 

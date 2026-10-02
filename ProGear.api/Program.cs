@@ -51,6 +51,70 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
         }
     });
 
+    app.MapGet("/productos/{id}/precios/historial", async (int id, ProGearDbContext context)=>
+    {
+        if (id <= 0)
+        {
+            return Results.BadRequest( new ErrorResponse
+            {
+               Exito = false,
+               Codigo = "INVALID_PRODUCT_ID",
+               Mensaje = "El identificador del producto debe ser mayor a cero." 
+            });
+        }
+
+        var producto = await context.Productos.FindAsync(id);
+
+        if (producto == null)
+        {
+             return Results.NotFound( new ErrorResponse
+            {
+               Exito = false,
+               Codigo = "PRODUCT_NOT_FOUND",
+               Mensaje = "No encontramos un producto con el identificador proporcionado." 
+            });  
+        }
+
+        var historial = await context.HistorialPrecios
+            .Where( h => h.IdProducto == id)
+            .ToListAsync();
+
+            return Results.Ok(historial);
+
+    });
+
+
+    app.MapGet("/productos/{id}/precio", async (int id, ProGearDbContext context) =>
+    {
+       if (id <= 0)
+        {
+            return Results.BadRequest(new ErrorResponse
+            {
+               Exito = false,
+               Codigo= "INVALID_PRODUCT_ID",
+               Mensaje = "El identificador del producto debe ser mayor a cero." 
+            });
+        } 
+
+        var producto = await context.Productos.FindAsync(id);
+
+        if (producto == null)
+        {
+            return Results.NotFound(new ErrorResponse
+            {
+               Exito = false,
+               Codigo = "PRODUCT_NOT_FOUND",
+               Mensaje = "No encontramos un producto con el identificador proporcionado." 
+            });
+        }
+
+        var precioVigente = await context.HistorialPrecios
+            .Where(h => h.IdProducto == id && h.FechaFin == null)
+            .SingleOrDefaultAsync();
+
+            return Results.Ok(precioVigente);
+    });
+
 /*---Configuración de la ruta POST para crear nuevos productos en la base de datos a través de la API.---*/
     app.MapPost("/productos", async (CrearProductoRequest request, ProGearDbContext context) =>
     {

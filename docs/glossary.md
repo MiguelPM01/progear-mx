@@ -92,3 +92,12 @@
 | `SaveChangesAsync()` | Método de EF Core que persiste de forma asíncrona los cambios seguidos por el `DbContext`. |
 | `IDENTITY` | Configuración de SQL Server que genera automáticamente valores numéricos para una columna, como el `Id` de Producto. |
 | Traducción de expresiones a SQL | Proceso mediante el cual EF Core convierte expresiones de C# en consultas SQL que ejecuta la base de datos. |
+| `HasKey` | Configuración de EF Core que indica la clave primaria de una entidad. |
+| `HasPrecision(10, 2)` | Configuración de EF Core que define precisión 10 y 2 decimales para un valor decimal, como `Precio`. |
+| `HasOne` / `WithMany` | Configuración de EF Core que expresa una relación de uno a muchos entre entidades. |
+| `HasForeignKey` | Configuración de EF Core que indica la propiedad que funciona como clave foránea. |
+| `ToListAsync()` | Ejecuta una consulta asíncrona y materializa todos los resultados como una lista; si no hay filas, la lista es `[]`. |
+| `SingleOrDefaultAsync()` | Ejecuta una consulta que espera cero o un resultado; devuelve `null` sin filas y falla si encuentra más de uno. |
+| Colección vacía `[]` | Respuesta que representa una lista sin elementos. |
+| Recurso único `null` | Respuesta que indica que no existe el recurso único solicitado, sin confundirlo con una colección vacía. |
+| Debugging basado en evidencia | Investigar comparando código, consulta y respuesta observada antes de modificar la implementación. |

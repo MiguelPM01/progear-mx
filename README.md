@@ -13,6 +13,8 @@ Entity Framework Core. Ya cuenta con:
 
 - consulta de todos los productos: `GET /productos`;
 - consulta por identificador: `GET /productos/{id}`;
+- consulta del historial de precios: `GET /productos/{id}/precios/historial`;
+- consulta del precio vigente: `GET /productos/{id}/precio`;
 - creación validada: `POST /productos`;
 - validación de nombre y SKU no vacíos;
 - validación de SKU duplicado;
@@ -21,9 +23,9 @@ Entity Framework Core. Ya cuenta con:
 La lista local de productos y el identificador manual fueron eliminados. La
 API ya consulta e inserta productos en la base de datos; SQL Server genera el
 identificador mediante `IDENTITY`. Inventario e historial de precios ya tienen
-modelos y mapeos en EF Core, pero sus operaciones específicas todavía no forman
-parte del vertical implementado. Ventas, autenticación, frontend y otras
-capacidades quedan fuera del vertical actual.
+modelos y mapeos en EF Core. El historial ya cuenta con consultas GET; el cambio
+de precio y las operaciones de Inventario todavía están pendientes. Ventas,
+autenticación, frontend y otras capacidades quedan fuera del vertical actual.
 
 ## Tecnologías
 

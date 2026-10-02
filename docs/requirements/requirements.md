@@ -50,13 +50,14 @@ El sistema debe permitir:
 - El precio no se almacenará directamente en Producto.
 - El precio vigente se obtiene del historial de precios.
 
-### Estado de implementación — 2026-10-01
+### Estado de implementación — 2026-10-02
 
 El vertical actual de productos ya está conectado a SQL Server mediante Entity
 Framework Core. La API permite consultar todos los productos, consultar uno por
 identificador y crear productos. La creación valida nombre, SKU y SKU duplicado;
 el identificador lo genera SQL Server. Las operaciones específicas de
-`Inventario` e `HistorialPrecio` todavía no están expuestas por la API.
+Las consultas específicas de `HistorialPrecio` ya están expuestas por la API;
+el cambio de precio y las operaciones de `Inventario` todavía están pendientes.
 
 ---
 
@@ -69,6 +70,34 @@ Un producto puede tener:
 - Ningún registro de precio.
 - Un registro de precio.
 - Múltiples registros históricos.
+
+### Consultas HTTP implementadas
+
+#### `GET /productos/{id}/precios/historial`
+
+Devuelve la colección completa de registros de precio del producto.
+
+- `400 Bad Request` si `id` no es mayor que cero, con código
+  `INVALID_PRODUCT_ID`.
+- `404 Not Found` si no existe el producto, con código
+  `PRODUCT_NOT_FOUND`.
+- `200 OK` con una colección de `HistorialPrecio`; si no hay registros, la
+  colección es `[]`.
+
+#### `GET /productos/{id}/precio`
+
+Devuelve el único registro cuyo `FechaFin` es `NULL`, es decir, el precio
+vigente.
+
+- `400 Bad Request` si `id` no es mayor que cero, con código
+  `INVALID_PRODUCT_ID`.
+- `404 Not Found` si no existe el producto, con código
+  `PRODUCT_NOT_FOUND`.
+- `200 OK` con el registro vigente o `null` si el producto existe pero no tiene
+  un precio vigente.
+
+Estas consultas no cambian precios ni crean registros; solo leen el estado
+actual del historial.
 
 ### Reglas
 

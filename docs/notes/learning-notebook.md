@@ -893,3 +893,92 @@ queda pendiente.
 ### Cierre
 
 Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+
+## Sesión — 2 de octubre de 2026
+
+### Tema y objetivo
+
+Cerrar el trabajo de consulta de `HistorialPrecio` mediante dos endpoints y
+entender qué está haciendo EF Core en cada consulta.
+
+### Mapeo de `HistorialPrecio` en EF Core
+
+**Términos en inglés:** `HasKey`, `HasPrecision`, `HasOne`, `WithMany`,
+`HasForeignKey`, `DbSet`, relationship, cardinality.
+
+**Explicación sencilla:** `HistorialPrecio` se registra en el
+`ProGearDbContext` como `DbSet`. En `OnModelCreating`, `HasKey(h => h.Id)`
+indica su clave primaria; `HasPrecision(10, 2)` configura la precisión del
+precio; y `HasOne<Producto>().WithMany().HasForeignKey(h => h.IdProducto)`
+expresa que cada registro pertenece a un producto y que un producto puede
+tener cero, uno o muchos registros históricos.
+
+**Cómo lo razoné:** La relación no significa que todo producto deba tener un
+precio. Significa que un producto puede existir sin registros, pero cada
+registro de `HistorialPrecio` necesita apuntar a un `Producto`: `Producto 1 :
+0..N HistorialPrecio`.
+
+### Consultas y traducción conceptual
+
+`Where(h => h.IdProducto == id).ToListAsync()` filtra el historial por
+producto y ejecuta la consulta de forma asíncrona. Conceptualmente, EF Core
+traduce la expresión a una consulta parecida a:
+
+~~~sql
+SELECT *
+FROM HistorialPrecio
+WHERE IdProducto = @id;
+~~~
+
+Para el precio vigente se usó `Where(h => h.IdProducto == id &&
+h.FechaFin == null).SingleOrDefaultAsync()`. `SingleOrDefaultAsync()` expresa
+que se espera cero o un registro: devuelve `null` si no hay ninguno, devuelve
+el único registro si existe uno y falla si hay más de uno. La regla de un solo
+precio vigente hace que ese último caso represente un estado inconsistente.
+
+### Colección frente a recurso único
+
+El historial completo es una colección: sin registros llega como `[]`, porque
+la respuesta representa una lista aunque esté vacía. El precio vigente es un
+recurso único: si el producto existe pero no tiene precio vigente, llega como
+`null`. El `1` que se veía a la izquierda en Postman era el número de línea del
+editor de respuesta, no el contenido de la respuesta. Compararlo con la línea
+inicial de un archivo vacío en VS Code ayudó a interpretar correctamente la
+evidencia.
+
+### Endpoints y pruebas realizadas
+
+- `GET /productos/{id}/precios/historial`: valida un identificador mayor que
+  cero, devuelve `400` para un identificador inválido, `404` si el producto no
+  existe y `200` con una colección, incluso cuando está vacía.
+- `GET /productos/{id}/precio`: valida un identificador mayor que cero,
+  devuelve `400` para un identificador inválido, `404` si el producto no
+  existe y `200` con el registro vigente o `null` cuando todavía no existe.
+
+Se probaron las respuestas para un producto con historial y precio vigente,
+para un producto sin precio vigente, para un identificador inválido y para un
+producto inexistente. También se comparó la respuesta observada en Postman con
+la consulta y el código del endpoint.
+
+### Qué aprendí
+
+- El mapeo de EF Core conecta propiedades C# con claves, precisión y
+  relaciones de la base de datos.
+- `ToListAsync()` representa una consulta de colección; `SingleOrDefaultAsync()`
+  representa una consulta de recurso único con semántica 0/1/más de 1.
+- `[]` y `null` comunican situaciones distintas: colección vacía frente a
+  recurso único ausente.
+- Debugging es revisar la evidencia completa y cuestionar su interpretación,
+  no cambiar el endpoint a ciegas.
+
+### Límite de la sesión
+
+Se completaron las consultas GET de `HistorialPrecio`, pero no se implementó
+el cambio de precio desde la API, ni transacciones nuevas, ni operaciones de
+`Inventario`.
+
+### Cierre
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.

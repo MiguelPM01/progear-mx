@@ -36,9 +36,33 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 
 **Estado:** En progreso
 
-La persistencia básica del catálogo de productos ya está funcionando. El
-trabajo pendiente se concentra en las operaciones específicas de inventario,
-historial de precios y las pruebas automatizadas correspondientes.
+La persistencia básica del catálogo de productos ya está funcionando. También
+se completaron los dos GET de consulta de `HistorialPrecio`. El trabajo
+pendiente se concentra en el cambio de precio, las operaciones de inventario y
+las pruebas automatizadas correspondientes.
+
+## Sesión documentada — 2026-10-02
+
+- [x] Completar `GET /productos/{id}/precios/historial`.
+- [x] Completar `GET /productos/{id}/precio`.
+- [x] Validar identificadores inválidos con `400`.
+- [x] Validar productos inexistentes con `404`.
+- [x] Confirmar `200` con `[]` para un historial vacío.
+- [x] Confirmar `200` con `null` cuando el producto existe pero no tiene precio
+  vigente.
+- [x] Confirmar `200` con los datos del historial o del precio vigente cuando
+  existen.
+- [x] Revisar el mapeo EF Core de `HistorialPrecio` y la traducción conceptual
+  de las consultas LINQ a SQL.
+- [x] Resolver mediante debugging basado en evidencia que el `1` visible en
+  Postman era el número de línea del editor y no el contenido de la respuesta.
+
+### Estado técnico al cierre
+
+Los endpoints de consulta de historial y precio vigente están documentados con
+el contrato `400/404/200` observado. El cambio de precio mediante cierre e
+inserción transaccional todavía no está implementado en la API. `Inventario`
+continúa fuera de las operaciones específicas trabajadas en esta sesión.
 
 ## Sesión documentada — 2026-10-01
 
@@ -161,7 +185,9 @@ específicas implementadas en la API.
 - [x] Crear DbContext
 - [ ] Ejecutar migraciones
 - [x] Sustituir almacenamiento en memoria por SQL Server para productos
-- [ ] Implementar operaciones de Inventario e HistorialPrecio en la API
+- [x] Implementar consultas GET de HistorialPrecio en la API
+- [ ] Implementar cambio de precio en la API
+- [ ] Implementar operaciones de Inventario en la API
 
 ---
 
