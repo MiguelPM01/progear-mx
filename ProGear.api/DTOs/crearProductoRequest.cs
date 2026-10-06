@@ -1,4 +1,4 @@
-namespace ProGear.Api;
+namespace ProGear.Api.DTOs;
 public class CrearProductoRequest
 {
     public required string Nombre { get;set; }

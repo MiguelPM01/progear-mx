@@ -101,3 +101,13 @@
 | Colección vacía `[]` | Respuesta que representa una lista sin elementos. |
 | Recurso único `null` | Respuesta que indica que no existe el recurso único solicitado, sin confundirlo con una colección vacía. |
 | Debugging basado en evidencia | Investigar comparando código, consulta y respuesta observada antes de modificar la implementación. |
+| Scope / alcance | Límite dentro del cual una variable, operación o regla es válida. |
+| Atomicidad | Propiedad por la que una operación compuesta se confirma completa o se revierte completa. |
+| Commit de transacción | Confirmación definitiva de los cambios realizados dentro de una transacción. |
+| Rollback | Reversión de los cambios de una transacción que no pudo completarse. |
+| BeginTransactionAsync | Método que inicia una transacción de base de datos de forma asíncrona. |
+| CommitAsync | Método que confirma una transacción de forma asíncrona. |
+| RollbackAsync | Método que revierte una transacción de forma asíncrona. |
+| Prueba controlada | Prueba que provoca deliberadamente una condición conocida para comprobar un comportamiento. |
+| PEG | Convención de prueba: Prueba Endpoint GET. |
+| PEP | Convención de prueba: Prueba Endpoint POST. |

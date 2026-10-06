@@ -1,6 +1,8 @@
 using System.Text.Json;
+using ProGear.Api.Responses;
 
-namespace ProGear.Api;
+namespace ProGear.Api.Middleware;
+
 
 public class ErrorHandlingMiddleware
 {

@@ -1,4 +1,4 @@
-namespace ProGear.Api;
+namespace ProGear.Api.Responses;
 
 public class ErrorResponse
 {

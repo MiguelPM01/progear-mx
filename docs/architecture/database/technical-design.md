@@ -5,9 +5,9 @@
 Este documento describe la documentación técnica de `Producto`, `Inventario` e
 `HistorialPrecio`. El modelo conceptual está en `docs/database/erd/progear-mx.dbml`.
 La API ya usa SQL Server mediante Entity Framework Core para las operaciones
-básicas de productos y para consultar el historial de precios. Todavía no
-existe una migración documentada aquí; el cambio de precio y las operaciones
-específicas de inventario siguen pendientes.
+básicas de productos y para consultar y registrar precios. Todavía no existe
+una migración documentada aquí; las operaciones específicas de inventario
+siguen pendientes.
 
 ## Entidades y relaciones
 
@@ -52,7 +52,7 @@ La API usa actualmente este flujo para productos:
 
 La lista local de productos y el identificador manual fueron eliminados.
 
-## Consultas actuales de HistorialPrecio
+## Operaciones actuales de HistorialPrecio
 
 La API expone dos consultas de solo lectura:
 
@@ -60,6 +60,7 @@ La API expone dos consultas de solo lectura:
 |---|---|---|
 | `GET /productos/{id}/precios/historial` | `Where(h => h.IdProducto == id).ToListAsync()` | `200` con colección; `[]` si está vacía |
 | `GET /productos/{id}/precio` | `Where(h => h.IdProducto == id && h.FechaFin == null).SingleOrDefaultAsync()` | `200` con un registro o `null` |
+| `GET /productos/{id}/precios/{precioId}` | `Where(h => h.IdProducto == id && h.Id == precioId).SingleOrDefaultAsync()` | `200` con el registro perteneciente al producto |
 
 Ambos endpoints devuelven `400` para un identificador no mayor que cero y
 `404` si el producto no existe. `SingleOrDefaultAsync()` espera cero o un
@@ -67,8 +68,10 @@ registro: devuelve `null` sin coincidencias y señala un estado inconsistente
 si encuentra más de uno. La consulta de historial materializa una colección,
 por lo que cero resultados se representan como `[]`.
 
-Estas operaciones no implementan todavía el cambio de precio mediante
-transacción ni modifican `HistorialPrecio`.
+El endpoint `POST /productos/{id}/precios` valida producto, precio positivo y
+no duplicación del precio vigente. Si existe un precio vigente, le asigna
+`FechaFin`; después agrega el nuevo registro con `FechaInicio` en el mismo
+instante y `FechaFin = NULL`.
 
 ## Constraints e índice único filtrado
 
@@ -105,7 +108,9 @@ VALUES (
 COMMIT TRANSACTION;
 ```
 
-`@MomentoCambio` se captura una sola vez para que el cierre y la apertura compartan exactamente el mismo instante. `BEGIN TRANSACTION` inicia la operación, `COMMIT` confirma y `ROLLBACK` revierte si una parte falla.
+En la implementación actual, el instante se captura una sola vez en
+`momentoCambio`. `BeginTransactionAsync()` inicia la operación, `CommitAsync()`
+confirma y `RollbackAsync()` revierte si una parte falla.
 
 ## Trazabilidad
 
@@ -114,10 +119,13 @@ COMMIT TRANSACTION;
 - **Protección:** índice único filtrado por `IdProducto` con `FechaFin IS NULL`.
 - **Operación:** cerrar con `UPDATE` y crear con `INSERT` dentro de una transacción.
 - **Resultado observado:** el precio anterior quedó cerrado y el nuevo quedó vigente.
+- **Prueba controlada:** una excepción provocada antes del commit devolvió `500`
+  mediante el middleware; el precio anterior permaneció vigente y el nuevo no
+  quedó confirmado.
 
 ## Pendientes explícitos
 
 - Crear o documentar el esquema SQL Server versionado y las migraciones.
 - Definir en SQL los `CHECK`, `DEFAULT` y el índice único filtrado.
-- Implementar las operaciones de `Inventario` e `HistorialPrecio`.
-- Probar desde la API el cambio de precio y sus casos de error.
+- Implementar las operaciones de `Inventario`.
+- Crear pruebas automatizadas; las pruebas PEG/PEP documentadas hasta ahora son manuales.

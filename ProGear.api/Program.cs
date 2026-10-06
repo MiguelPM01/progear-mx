@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using ProGear.Api.Data;
-
-using ProGear.Api;
 using ProGear.Api.Models;
+using ProGear.Api.DTOs;
+using ProGear.Api.Middleware;
+using ProGear.Api.Responses;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ProGearDbContext>(options =>
@@ -13,8 +15,11 @@ options.UseSqlServer(
 var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
-
+/*--------------------------------------------------------------------------------------------------------------------*/
 /*---Configuración de las rutas GET para solicitar información de productos en la base de datos a través de la API.---*/
+/*-------------------------------------------------------------------------------------------------------------------*/
+
+/*---Configuración de la ruta GET para obtener todos los productos de la base de datos a través de la API.---*/
     app.MapGet("/productos", async (ProGearDbContext context) =>
     {
        var productos = await context.Productos.ToListAsync();
@@ -23,6 +28,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
     });
 
+/*---Configuración de la ruta GET para obtener un producto específico de la base de datos a través de la API.---*/
     app.MapGet("/productos/{id}",  async (int id, ProGearDbContext context) =>
     {
         if (id <= 0)
@@ -51,6 +57,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
         }
     });
 
+/*---Configuración de la ruta GET para obtener el historial de precios de un producto específico de la base de datos a través de la API.---*/
     app.MapGet("/productos/{id}/precios/historial", async (int id, ProGearDbContext context)=>
     {
         if (id <= 0)
@@ -83,7 +90,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
     });
 
-
+/*---Configuración de la ruta GET para obtener el precio vigente de un producto específico de la base de datos a través de la API.---*/
     app.MapGet("/productos/{id}/precio", async (int id, ProGearDbContext context) =>
     {
        if (id <= 0)
@@ -114,6 +121,64 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
             return Results.Ok(precioVigente);
     });
+
+    /*---Configuración de la ruta GET para obtener el registro de precios históricos de un producto específico.---*/
+
+    app.MapGet("/productos/{id}/precios/{precioId}", async (int id, int precioId, ProGearDbContext context) =>
+    {
+        if (id <= 0)
+        {
+            return Results.BadRequest(new ErrorResponse
+            {
+                Exito = false,
+                Codigo = "INVALID_PRODUCT_ID",
+                Mensaje = "El identificador del producto debe ser mayor a cero."
+            });
+        }
+
+        var producto = await context.Productos.FindAsync(id);
+
+        if (producto == null)
+        {
+            return Results.NotFound(new ErrorResponse
+            {
+                Exito = false,
+                Codigo = "PRODUCT_NOT_FOUND",
+                Mensaje = "No encontramos un producto con el identificador proporcionado."
+            });
+        }
+
+        if (precioId <= 0)
+        {
+            return Results.BadRequest(new ErrorResponse
+            {
+                Exito = false,
+                Codigo = "INVALID_PRICE_ID",
+                Mensaje = "El identificador del precio debe ser mayor a cero."
+            });
+        }
+
+        var precioHistorico = await context.HistorialPrecios
+            .Where(h => h.IdProducto == id && h.Id == precioId)
+            .SingleOrDefaultAsync();
+
+        if (precioHistorico == null)
+        {
+            return Results.NotFound(new ErrorResponse
+            {
+                Exito = false,
+                Codigo = "PRICE_HISTORY_NOT_FOUND",
+                Mensaje = "No encontramos el registro específico del historial de precios de este producto."
+            });
+        }
+
+        return Results.Ok(precioHistorico);
+
+    });
+
+/*------------------------------------------------------------------------------------------------------------------*/
+/*--- Configuración de las rutas POST para mandar iformación de productos a la base de datos a través de la API.---*/
+/*----------------------------------------------------------------------------------------------------------------*/
 
 /*---Configuración de la ruta POST para crear nuevos productos en la base de datos a través de la API.---*/
     app.MapPost("/productos", async (CrearProductoRequest request, ProGearDbContext context) =>
@@ -148,8 +213,6 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
             });
         }
 
-       
-
         var producto = new Producto
         {
           Nombre = request.Nombre,
@@ -165,6 +228,90 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
     });
 
+
+/*--- Configuración de la ruta POST para agregar precios a productos existentes. ---*/
+app.MapPost("/productos/{id}/precios", async (int id, PrecioProductoRequest request, ProGearDbContext context) =>
+{
+    if (id <= 0)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+            Exito = false,
+            Codigo = "INVALID_PRODUCT_ID",
+            Mensaje = "El identificador del producto debe ser mayor a cero."
+        });
+    }
+
+    var producto = await context.Productos.FindAsync(id);
+
+    if (producto == null)
+    {
+        return Results.NotFound(new ErrorResponse
+        {
+            Exito = false,
+            Codigo = "PRODUCT_NOT_FOUND",
+            Mensaje = "No encontramos un producto con el identificador proporcionado."
+        });
+    }
+
+    if (request.Precio <= 0)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+           Exito = false,
+           Codigo = "INVALID_PRODUCT_PRICE",
+            Mensaje = "El precio del producto debe ser mayor a cero." 
+        });
+    }
+
+     var precioVigente = await context.HistorialPrecios
+        .Where(h => h.IdProducto == id && h.FechaFin == null)
+        .SingleOrDefaultAsync();
+
+    if (precioVigente != null && request.Precio == precioVigente.Precio)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+            Exito = false,
+            Codigo = "DUPLICATED_PRICE",
+            Mensaje = "El precio registrado no debe ser igual al precio vigente del producto."
+        });
+    }
+
+    var momentoCambio = DateTime.Now;
+
+    await using var transaction = await context.Database.BeginTransactionAsync();
+
+    try
+    {
+        if (precioVigente != null)
+        {
+            precioVigente.FechaFin = momentoCambio;
+        }
+
+        var nuevoPrecio = new HistorialPrecio
+        {
+            IdProducto = id,
+            Precio = request.Precio,
+            FechaInicio = momentoCambio,
+            FechaFin = null
+        };
+
+        context.HistorialPrecios.Add(nuevoPrecio);
+
+        await context.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+
+        return Results.Created($"/productos/{id}/precios/{nuevoPrecio.Id}", nuevoPrecio);
+    }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+
+    }
+});
 app.Run();
 
  /*if (request.Precio < 0)

@@ -830,6 +830,74 @@ Construimos → probamos → reflexionamos → documentamos → cerramos.
 
 ---
 
+## Sesión — 6 de octubre de 2026
+
+### Tema y objetivo
+
+Cerrar `HistorialPrecio` comprobando que las reglas definidas antes del
+desarrollo se cumplen en los cuatro endpoints trabajados y dejar preparado el
+siguiente bloque: `Inventario`.
+
+### Endpoints y reglas comprobadas
+
+- `GET /productos/{id}/precios/historial`: devuelve el historial completo; un
+  historial vacío se representa como `[]`.
+- `GET /productos/{id}/precio`: devuelve el precio con `FechaFin = NULL` o
+  `null` si el producto existe sin precio vigente.
+- `GET /productos/{id}/precios/{precioId}`: solo devuelve el registro cuando
+  pertenece al producto solicitado.
+- `POST /productos/{id}/precios`: rechaza identificadores inválidos, precios
+  menores o iguales que cero y la repetición del precio vigente; registra el
+  primer precio o cierra el vigente y crea el nuevo.
+
+### Transacción, Commit y Rollback
+
+**Términos en inglés:** transaction, atomicity, Commit, Rollback, scope.
+
+**Explicación sencilla:** Una transacción agrupa el cierre del precio anterior
+y la creación del nuevo. La atomicidad significa que el cambio completo se
+confirma o se revierte completo. `Commit` confirma; `Rollback` deshace los
+cambios no confirmados. El alcance (`scope`) ayuda a entender dentro de qué
+operación y contexto es válida una variable o regla.
+
+**Cómo lo razoné:** No bastaba con observar que existían llamadas a commit y
+rollback. Se provocó una excepción después de `SaveChangesAsync()` y antes de
+confirmar, para comprobar el estado real de la base de datos.
+
+### Prueba controlada
+
+Partiendo de `$2,100` vigente, se intentó registrar `$2,500`. La excepción
+controlada pasó por `RollbackAsync()` y el middleware devolvió `500 Internal
+Server Error`. Al consultar de nuevo, `$2,100` continuó vigente y `$2,500` no
+quedó confirmado. Después se retiró la condición artificial y una prueba normal
+posterior funcionó con `201 Created`.
+
+### Pruebas registradas
+
+Se conservaron las pruebas manuales `PEG-001` a `PEG-009` y `PEP-010` a
+`PEP-015`. `PEG` significa **Prueba Endpoint GET** y `PEP` significa **Prueba
+Endpoint POST**. La matriz con sus endpoints y resultados está en
+`docs/requirements/requirements.md`.
+
+### Conceptos aprendidos o confirmados
+
+- `DbSet` representa una entidad en el `DbContext` y permite consultar o seguir
+  sus registros.
+- `Commit` confirma una transacción y `Rollback` revierte sus cambios.
+- La prueba controlada sirve para validar una propiedad de integridad bajo una
+  falla provocada, sin confundirla con el flujo normal.
+- La evidencia de pruebas manuales permite cerrar esta funcionalidad, mientras
+  que las pruebas automatizadas quedan como mejora futura.
+
+### Cierre y siguiente bloque
+
+`HistorialPrecio` queda cerrado conforme a las reglas de negocio establecidas.
+El siguiente bloque de desarrollo es `Inventario`.
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+
 ## Sesión — 1 de octubre de 2026
 
 ### Tema y objetivo

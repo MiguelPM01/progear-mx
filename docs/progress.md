@@ -34,12 +34,35 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 
 **Fase:** Modelado de dominio y base de datos
 
-**Estado:** En progreso
+**Estado:** En progreso — `HistorialPrecio` cerrado; siguiente bloque: `Inventario`
 
 La persistencia básica del catálogo de productos ya está funcionando. También
-se completaron los dos GET de consulta de `HistorialPrecio`. El trabajo
-pendiente se concentra en el cambio de precio, las operaciones de inventario y
-las pruebas automatizadas correspondientes.
+se completaron las consultas, el registro/cambio de precio y la validación
+controlada de transacción de `HistorialPrecio`. El siguiente bloque es
+`Inventario`; las pruebas documentadas de este cierre fueron manuales.
+
+## Sesión documentada — 2026-10-06
+
+- [x] Completar `GET /productos/{id}/precios/historial`.
+- [x] Completar `GET /productos/{id}/precio`.
+- [x] Completar `GET /productos/{id}/precios/{precioId}`.
+- [x] Completar `POST /productos/{id}/precios` para primer precio y cambio.
+- [x] Validar identificadores, precio menor o igual que cero y precio duplicado.
+- [x] Confirmar cierre del precio anterior y creación del nuevo precio vigente.
+- [x] Confirmar transacción con `Commit`.
+- [x] Ejecutar prueba controlada de `Rollback` y comprobar que `$2,100` permaneció vigente.
+- [x] Retirar la condición artificial y confirmar una prueba normal posterior.
+- [x] Documentar pruebas `PEG-001` a `PEG-009` y `PEP-010` a `PEP-015`.
+
+### Cierre de HistorialPrecio
+
+`HistorialPrecio` queda cerrado conforme a las reglas definidas antes de su
+desarrollo. El siguiente bloque de trabajo es `Inventario`.
+
+### Pruebas registradas
+
+La matriz completa y los resultados están en `docs/requirements/requirements.md`.
+Se conserva la convención `PEG = Prueba Endpoint GET` y `PEP = Prueba Endpoint POST`.
 
 ## Sesión documentada — 2026-10-02
 
@@ -60,9 +83,8 @@ las pruebas automatizadas correspondientes.
 ### Estado técnico al cierre
 
 Los endpoints de consulta de historial y precio vigente están documentados con
-el contrato `400/404/200` observado. El cambio de precio mediante cierre e
-inserción transaccional todavía no está implementado en la API. `Inventario`
-continúa fuera de las operaciones específicas trabajadas en esta sesión.
+el contrato `400/404/200` observado. En la sesión posterior del 2026-10-06 se
+completó el cambio de precio y se cerró `HistorialPrecio`.
 
 ## Sesión documentada — 2026-10-01
 
@@ -186,7 +208,7 @@ específicas implementadas en la API.
 - [ ] Ejecutar migraciones
 - [x] Sustituir almacenamiento en memoria por SQL Server para productos
 - [x] Implementar consultas GET de HistorialPrecio en la API
-- [ ] Implementar cambio de precio en la API
+- [x] Implementar cambio de precio en la API
 - [ ] Implementar operaciones de Inventario en la API
 
 ---

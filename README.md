@@ -15,6 +15,8 @@ Entity Framework Core. Ya cuenta con:
 - consulta por identificador: `GET /productos/{id}`;
 - consulta del historial de precios: `GET /productos/{id}/precios/historial`;
 - consulta del precio vigente: `GET /productos/{id}/precio`;
+- consulta de un registro de precio: `GET /productos/{id}/precios/{precioId}`;
+- registro y cambio de precio: `POST /productos/{id}/precios`;
 - creación validada: `POST /productos`;
 - validación de nombre y SKU no vacíos;
 - validación de SKU duplicado;
@@ -23,8 +25,8 @@ Entity Framework Core. Ya cuenta con:
 La lista local de productos y el identificador manual fueron eliminados. La
 API ya consulta e inserta productos en la base de datos; SQL Server genera el
 identificador mediante `IDENTITY`. Inventario e historial de precios ya tienen
-modelos y mapeos en EF Core. El historial ya cuenta con consultas GET; el cambio
-de precio y las operaciones de Inventario todavía están pendientes. Ventas,
+modelos y mapeos en EF Core. `HistorialPrecio` cuenta con consultas, registro y
+cambio transaccional de precio; el siguiente bloque es Inventario. Ventas,
 autenticación, frontend y otras capacidades quedan fuera del vertical actual.
 
 ## Tecnologías
@@ -57,5 +59,5 @@ la terminal. Los ejemplos de requests pueden consultarse en
 El proyecto prioriza construir un vertical pequeño y comprensible, registrar
 el razonamiento y agregar complejidad solo cuando una necesidad concreta la
 justifique. El aprendizaje y las decisiones se documentan en
-[`docs/learning-notebook.md`](docs/learning-notebook.md), junto con el
+[`docs/notes/learning-notebook.md`](docs/notes/learning-notebook.md), junto con el
 [`glosario`](docs/glossary.md) y el [`progreso`](docs/progress.md).
