@@ -5,9 +5,9 @@
 Este documento describe la documentación técnica de `Producto`, `Inventario` e
 `HistorialPrecio`. El modelo conceptual está en `docs/database/erd/progear-mx.dbml`.
 La API ya usa SQL Server mediante Entity Framework Core para las operaciones
-básicas de productos y para consultar y registrar precios. Todavía no existe
-una migración documentada aquí; las operaciones específicas de inventario
-siguen pendientes.
+básicas de productos, inventario y precios. Todavía no existe una migración
+documentada aquí. Inventario cuenta con consulta general y registro de entradas;
+reservas, salidas, liberaciones y consulta individual siguen pendientes.
 
 ## Entidades y relaciones
 
@@ -26,6 +26,11 @@ siguen pendientes.
 `IdProducto` es clave foránea hacia `Producto` y es único por producto. `Existencia` y `Reservado` representan cantidades no negativas. `Disponible = Existencia - Reservado` es un dato derivado y no se almacena.
 
 La ausencia de fila no equivale a `Existencia = 0`: el primer caso significa que aún no se registró inventario; el segundo, que sí existe un registro sin unidades.
+
+`GET /inventario` combina `Inventario` y `Producto` mediante un `Join` y
+proyecta `Disponible = Existencia - Reservado`. `POST
+/inventario/{idProducto}/entradas` crea el registro si no existe o incrementa
+`Existencia` si ya existe; `Reservado` no cambia durante una entrada.
 
 ### HistorialPrecio
 
@@ -72,6 +77,18 @@ El endpoint `POST /productos/{id}/precios` valida producto, precio positivo y
 no duplicación del precio vigente. Si existe un precio vigente, le asigna
 `FechaFin`; después agrega el nuevo registro con `FechaInicio` en el mismo
 instante y `FechaFin = NULL`.
+
+## Operaciones actuales de Inventario
+
+La API expone una consulta general y una operación de entrada:
+
+| Endpoint | Flujo EF Core | Respuesta exitosa |
+|---|---|---|
+| `GET /inventario` | `Inventarios.Join(Productos, ...)` y `ToListAsync()` | `200` con el resumen de cada inventario registrado |
+| `POST /inventario/{idProducto}/entradas` | `FindAsync`, `SingleOrDefaultAsync`, `Add` cuando corresponde y `SaveChangesAsync()` | `201` con `InventarioResponse` |
+
+La ausencia de inventario es válida para un producto. Por eso la primera
+entrada crea el registro y no devuelve `INVENTORY_NOT_FOUND`.
 
 ## Constraints e índice único filtrado
 
@@ -127,5 +144,6 @@ confirma y `RollbackAsync()` revierte si una parte falla.
 
 - Crear o documentar el esquema SQL Server versionado y las migraciones.
 - Definir en SQL los `CHECK`, `DEFAULT` y el índice único filtrado.
-- Implementar las operaciones de `Inventario`.
+- Implementar las operaciones restantes de `Inventario`: consulta individual,
+  reservas, salidas y liberaciones.
 - Crear pruebas automatizadas; las pruebas PEG/PEP documentadas hasta ahora son manuales.

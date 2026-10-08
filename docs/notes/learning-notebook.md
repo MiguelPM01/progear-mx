@@ -827,7 +827,6 @@ La conversación de la sesión reporta que el flujo se ejecutó y se observó en
 ## Cierre
 
 Construimos → probamos → reflexionamos → documentamos → cerramos.
-
 ---
 
 ## Sesión — 6 de octubre de 2026
@@ -894,8 +893,7 @@ Endpoint POST**. La matriz con sus endpoints y resultados está en
 `HistorialPrecio` queda cerrado conforme a las reglas de negocio establecidas.
 El siguiente bloque de desarrollo es `Inventario`.
 
-Construimos → probamos → reflexionamos → documentamos → cerramos.
-
+ Construimos → probamos → reflexionamos → documentamos → cerramos.
 ---
 
 ## Sesión — 1 de octubre de 2026
@@ -1046,6 +1044,230 @@ la consulta y el código del endpoint.
 Se completaron las consultas GET de `HistorialPrecio`, pero no se implementó
 el cambio de precio desde la API, ni transacciones nuevas, ni operaciones de
 `Inventario`.
+
+### Cierre
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+
+# Sesión - 8 de octubre de 2026
+
+### Tema y objetivo
+
+Diseñar y comenzar la implementación del módulo de `Inventario`, definir sus
+reglas de negocio y construir los primeros endpoints para consultar y registrar
+existencias.
+
+El objetivo fue entender cómo relacionar `Producto` e `Inventario` desde EF
+Core, diferenciar DTOs de entrada y salida, y aplicar las reglas de inventario
+mediante validaciones y decisiones de flujo.
+
+### Modelo y reglas de `Inventario`
+
+**Términos en inglés:** `JOIN`, `INNER JOIN`, `Request DTO`, `Response DTO`,
+`business rule`, `flow`.
+
+**Explicación sencilla:** `Producto` puede existir sin tener todavía un registro
+de `Inventario`. La ausencia del registro significa que todavía no se ha
+establecido inventario para ese producto. Una vez que existe el registro, puede
+tener `Existencia = 0`, lo que representa un inventario registrado pero sin
+stock.
+
+Las reglas establecidas fueron:
+
+- `Existencia >= 0`.
+- `Reservado >= 0`.
+- `Reservado <= Existencia`.
+- `Disponible = Existencia - Reservado`.
+- `Disponible >= 0`.
+
+Las operaciones de dominio definidas son entrada, reserva, salida o
+confirmación de venta, y liberación o cancelación. En esta sesión solo se
+implementaron la consulta general y la entrada de mercancía.
+
+### Relación entre `Producto` e `Inventario`
+
+**Términos en inglés:** `foreign key`, `primary key`, `relationship`,
+`cardinality`.
+
+La relación es:
+
+```text
+Producto 1 : 0..1 Inventario
+```
+
+`Inventario.IdProducto` referencia a `Producto.Id`. Un producto puede no tener
+fila en `Inventario`, pero no debe tener más de una. Esta diferencia conserva
+dos significados distintos:
+
+```text
+Producto existe + no existe Inventario = inventario aún no establecido
+Producto existe + existe Inventario + Existencia = 0 = inventario registrado sin stock
+```
+
+### `InventarioResponse`
+
+Se creó `InventarioResponse` como `Response DTO`. No representa una tabla;
+combina información de `Producto`, `Inventario` y el valor calculado
+`Disponible`.
+
+```text
+IdProducto, Nombre, Marca, Sku,
+Existencia, Reservado, Disponible
+```
+
+`Disponible` no se almacena directamente:
+
+```text
+Disponible = Existencia - Reservado
+```
+
+### `CantidadRequest`
+
+Se creó `CantidadRequest` como `Request DTO` reutilizable para las operaciones
+que reciben una cantidad.
+
+```csharp
+public class CantidadRequest
+{
+    public required int Cantidad { get; set; }
+}
+```
+
+La misma estructura puede servir para entradas, reservas, salidas y
+liberaciones cuando esas operaciones se implementen.
+
+### `GET /inventario`
+
+Se implementó el endpoint de consulta general mediante un `Join` entre
+`Inventario` y `Producto`:
+
+```text
+Inventario.IdProducto == Producto.Id
+        ↓
+combinar datos de ambas entidades
+        ↓
+calcular Disponible
+        ↓
+devolver la colección
+```
+
+El `Join` tiene semántica de `INNER JOIN`: solo aparecen registros con
+correspondencia en ambas entidades. Por eso un producto sin inventario no
+aparece en `GET /inventario`, aunque un inventario existente con `Existencia = 0`
+sí puede aparecer.
+
+### `POST /inventario/{idProducto}/entradas`
+
+Se implementó la primera operación de modificación: registrar una entrada de
+mercancía.
+
+El flujo es:
+
+```text
+Recibir idProducto y CantidadRequest
+        ↓
+Validar idProducto
+        ↓
+Buscar producto
+        ↓
+Validar Cantidad
+        ↓
+Buscar Inventario
+        ↓
+Crearlo o incrementar Existencia
+        ↓
+Guardar cambios
+        ↓
+Construir InventarioResponse
+        ↓
+201 Created
+```
+
+Si no existe inventario, se crea con `Existencia = Cantidad` y `Reservado = 0`.
+Si ya existe, se incrementa `Existencia`. `Reservado` no cambia con una entrada
+y `Disponible` se vuelve a calcular.
+
+### `ErrorResponse` y validaciones
+
+El endpoint reutiliza `ErrorResponse`, compuesto por `Exito`, `Codigo` y
+`Mensaje`.
+
+- `400 Bad Request`, `INVALID_PRODUCT_ID`, si `idProducto <= 0`.
+- `404 Not Found`, `PRODUCT_NOT_FOUND`, si el producto no existe.
+- `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`, si `Cantidad <= 0`.
+
+La ausencia de inventario no es un error en esta operación: representa el caso
+válido de la primera entrada y provoca la creación del registro.
+
+### Pruebas realizadas
+
+Las pruebas documentadas fueron manuales y corresponden a la entrada de
+mercancía:
+
+- `PEI-001`: primera entrada de 10 unidades → `201 Created`; `Existencia = 10`,
+  `Reservado = 0`, `Disponible = 10`.
+- `PEI-002`: entrada adicional de 5 unidades → `201 Created`; `Existencia = 15`
+  sin crear otro registro.
+- `PEI-003`: cantidad `0` → `400 Bad Request`,
+  `INVALID_INVENTORY_QUANTITY`.
+- `PEI-004`: cantidad `-5` → `400 Bad Request`,
+  `INVALID_INVENTORY_QUANTITY`.
+- `PEI-005`: `idProducto = -1` → `400 Bad Request`, `INVALID_PRODUCT_ID`.
+- `PEI-006`: `idProducto = 0` → `400 Bad Request`, `INVALID_PRODUCT_ID`.
+- `PEI-007`: producto inexistente → `404 Not Found`, `PRODUCT_NOT_FOUND`.
+- `PEI-008`: entrada con una reserva existente → pendiente hasta implementar
+  el endpoint de reservas.
+
+### Cómo lo razoné
+
+El endpoint se entendió como una secuencia de decisiones, no solo como código:
+
+```text
+¿ID válido?
+    ↓
+¿Producto existe?
+    ↓
+¿Cantidad válida?
+    ↓
+¿Existe inventario?
+    ├── no → crear
+    └── sí → incrementar Existencia
+    ↓
+Guardar y responder
+```
+
+Primero se define qué debe suceder, qué condiciones permiten continuar, qué
+estado cambia y qué respuesta recibe el consumidor. Después ese razonamiento se
+traduce a C# y EF Core.
+
+### Qué aprendí
+
+- `JOIN` combina información relacionada; `INNER JOIN` conserva solo las
+  correspondencias.
+- Un `Request DTO` y un `Response DTO` tienen responsabilidades diferentes.
+- `InventarioResponse` puede contener datos de varias entidades y un valor
+  calculado que no existe como columna.
+- Una entrada crea el inventario si no existe o incrementa `Existencia` si ya
+  existe.
+- `Reservado` no cambia al recibir mercancía.
+- Las validaciones forman parte de las reglas del dominio.
+- El pseudocódigo ayuda a ordenar el flujo antes de escribir sintaxis.
+
+### Límite de la sesión
+
+Se completaron el modelo y sus reglas, `InventarioResponse`, `CantidadRequest`,
+`GET /inventario`, `POST /inventario/{idProducto}/entradas` y las pruebas
+`PEI-001` a `PEI-007`.
+
+Quedan pendientes:
+
+- `GET /inventario/{idProducto}`.
+- `POST /inventario/{idProducto}/reservas`.
+- `POST /inventario/{idProducto}/salidas`.
+- `POST /inventario/{idProducto}/liberaciones`.
+- `PEI-008`, que depende de reservas.
 
 ### Cierre
 

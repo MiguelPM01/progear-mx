@@ -111,3 +111,10 @@
 | Prueba controlada | Prueba que provoca deliberadamente una condición conocida para comprobar un comportamiento. |
 | PEG | Convención de prueba: Prueba Endpoint GET. |
 | PEP | Convención de prueba: Prueba Endpoint POST. |
+| PEI | Convención de prueba: Prueba Endpoint Inventario. |
+| JOIN | Operación que combina registros de dos conjuntos usando una clave relacionada. |
+| INNER JOIN | Tipo de JOIN que devuelve únicamente registros con correspondencia en ambos conjuntos. |
+| Request DTO | DTO que representa los datos que la API recibe en una request. |
+| Response DTO | DTO que representa los datos que la API devuelve en una response. |
+| InventarioResponse | DTO de salida que combina datos de Producto, Inventario y Disponible calculado. |
+| CantidadRequest | DTO de entrada reutilizable que recibe la cantidad de una operación de inventario. |

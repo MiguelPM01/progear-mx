@@ -17,6 +17,8 @@ Entity Framework Core. Ya cuenta con:
 - consulta del precio vigente: `GET /productos/{id}/precio`;
 - consulta de un registro de precio: `GET /productos/{id}/precios/{precioId}`;
 - registro y cambio de precio: `POST /productos/{id}/precios`;
+- consulta del inventario registrado: `GET /inventario`;
+- registro de entradas de mercancía: `POST /inventario/{idProducto}/entradas`;
 - creación validada: `POST /productos`;
 - validación de nombre y SKU no vacíos;
 - validación de SKU duplicado;
@@ -26,8 +28,10 @@ La lista local de productos y el identificador manual fueron eliminados. La
 API ya consulta e inserta productos en la base de datos; SQL Server genera el
 identificador mediante `IDENTITY`. Inventario e historial de precios ya tienen
 modelos y mapeos en EF Core. `HistorialPrecio` cuenta con consultas, registro y
-cambio transaccional de precio; el siguiente bloque es Inventario. Ventas,
-autenticación, frontend y otras capacidades quedan fuera del vertical actual.
+cambio transaccional de precio. Inventario ya permite consultar los registros
+existentes y registrar entradas de mercancía; las reservas, salidas, liberaciones
+y la consulta individual quedan pendientes. Ventas, autenticación, frontend y
+otras capacidades quedan fuera del vertical actual.
 
 ## Tecnologías
 

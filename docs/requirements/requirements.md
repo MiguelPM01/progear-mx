@@ -56,8 +56,9 @@ El vertical actual de productos ya está conectado a SQL Server mediante Entity
 Framework Core. La API permite consultar todos los productos, consultar uno por
 identificador y crear productos. La creación valida nombre, SKU y SKU duplicado;
 el identificador lo genera SQL Server. `HistorialPrecio` cuenta con consultas
-GET, consulta por registro y alta/cambio de precio mediante POST. Las
-operaciones de `Inventario` todavía están pendientes.
+GET, consulta por registro y alta/cambio de precio mediante POST. `Inventario`
+ya cuenta con consulta general y registro de entradas; las demás operaciones
+siguen pendientes.
 
 ---
 
@@ -203,6 +204,45 @@ La disponibilidad se calcula como:
 - `Reservado` no puede ser negativo.
 - `Reservado` no puede superar la existencia.
 - No se almacena `Disponible`; se calcula a partir de los datos existentes.
+
+### Operaciones HTTP implementadas — 2026-10-08
+
+#### `GET /inventario`
+
+Devuelve los registros de inventario relacionados con un producto mediante un
+`Join`. Un producto sin registro de inventario no aparece en esta colección.
+
+La respuesta contiene `IdProducto`, `Nombre`, `Marca`, `Sku`, `Existencia`,
+`Reservado` y `Disponible`, donde `Disponible` se calcula como
+`Existencia - Reservado`.
+
+#### `POST /inventario/{idProducto}/entradas`
+
+Registra una entrada de mercancía para un producto existente.
+
+- `400 Bad Request` con `INVALID_PRODUCT_ID` si `idProducto` no es mayor que
+  cero.
+- `404 Not Found` con `PRODUCT_NOT_FOUND` si no existe el producto.
+- `400 Bad Request` con `INVALID_INVENTORY_QUANTITY` si `Cantidad` no es mayor
+  que cero.
+- Si no existe un registro de inventario, crea uno con `Reservado = 0`.
+- Si ya existe, incrementa `Existencia` y conserva `Reservado`.
+- `201 Created` devuelve el estado resultante como `InventarioResponse`.
+
+### Registro de pruebas manuales — PEI
+
+Convención: `PEI` significa **Prueba Endpoint Inventario**.
+
+| ID | Caso | Resultado observado |
+|---|---|---|
+| PEI-001 | Primera entrada de 10 unidades | `201 Created`; se creó el inventario con `Existencia = 10`, `Reservado = 0` y `Disponible = 10`. |
+| PEI-002 | Entrada adicional de 5 unidades | `201 Created`; `Existencia` pasó a 15 sin crear otro registro. |
+| PEI-003 | Cantidad `0` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
+| PEI-004 | Cantidad `-5` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
+| PEI-005 | `idProducto = -1` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
+| PEI-006 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
+| PEI-007 | Producto inexistente | `404 Not Found`, `PRODUCT_NOT_FOUND`. |
+| PEI-008 | Entrada con una reserva existente | Pendiente hasta implementar el endpoint de reservas. |
 
 ---
 

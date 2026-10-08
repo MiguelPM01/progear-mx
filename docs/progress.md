@@ -29,17 +29,45 @@ ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es un
 - Se eliminó la lista local de productos y `siguienteId`.
 - Se verificaron casos válidos y de error desde Postman, navegador y consultas
   directas a SQL Server, comprobando que los resultados coinciden.
+- Se implementó `GET /inventario` mediante un `Join` entre `Inventario` y
+  `Producto`, calculando `Disponible` sin almacenarlo.
+- Se implementó `POST /inventario/{idProducto}/entradas` para crear el registro
+  de inventario o incrementar `Existencia` cuando ya existe.
+- Se documentaron las validaciones `INVALID_PRODUCT_ID`, `PRODUCT_NOT_FOUND` e
+  `INVALID_INVENTORY_QUANTITY`, junto con las pruebas manuales `PEI-001` a
+  `PEI-007`; `PEI-008` permanece pendiente.
 
 ## Estado actual
 
 **Fase:** Modelado de dominio y base de datos
 
-**Estado:** En progreso — `HistorialPrecio` cerrado; siguiente bloque: `Inventario`
+**Estado:** En progreso — `HistorialPrecio` cerrado; primera entrega de
+`Inventario` completada; reservas y operaciones posteriores pendientes.
 
 La persistencia básica del catálogo de productos ya está funcionando. También
 se completaron las consultas, el registro/cambio de precio y la validación
-controlada de transacción de `HistorialPrecio`. El siguiente bloque es
-`Inventario`; las pruebas documentadas de este cierre fueron manuales.
+controlada de transacción de `HistorialPrecio`. En la sesión del 2026-10-08 se
+implementaron la consulta general de inventario y las entradas de mercancía;
+las pruebas documentadas de ambos cierres fueron manuales.
+
+## Sesión documentada — 2026-10-08
+
+- [x] Documentar el modelo y las reglas de `Inventario`.
+- [x] Mantener la semántica `Producto 1 : 0..1 Inventario`.
+- [x] Crear `InventarioResponse` como DTO de salida.
+- [x] Crear `CantidadRequest` como DTO reutilizable de entrada.
+- [x] Implementar `GET /inventario` mediante `Join`.
+- [x] Implementar `POST /inventario/{idProducto}/entradas`.
+- [x] Validar identificador, producto inexistente y cantidad no positiva con
+  `ErrorResponse`.
+- [x] Registrar las pruebas manuales `PEI-001` a `PEI-007`.
+- [ ] Ejecutar `PEI-008`, pendiente hasta implementar reservas.
+
+### Cierre de la sesión
+
+La primera entrega de `Inventario` queda documentada. El siguiente trabajo es
+implementar y probar reservas, salidas, liberaciones y la consulta individual,
+sin atribuir esos comportamientos a esta sesión.
 
 ## Sesión documentada — 2026-10-06
 
@@ -209,7 +237,8 @@ específicas implementadas en la API.
 - [x] Sustituir almacenamiento en memoria por SQL Server para productos
 - [x] Implementar consultas GET de HistorialPrecio en la API
 - [x] Implementar cambio de precio en la API
-- [ ] Implementar operaciones de Inventario en la API
+- [x] Implementar consulta general y entradas de Inventario en la API
+- [ ] Implementar consulta individual, reservas, salidas y liberaciones de Inventario
 
 ---
 

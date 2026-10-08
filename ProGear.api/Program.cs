@@ -175,7 +175,30 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
         return Results.Ok(precioHistorico);
 
     });
+/*---Configuración de la ruta GET para obtener el inventario general de productos.---*/
+    app.MapGet("/inventario", async (ProGearDbContext context) =>
+    {
+       var inventario = await context.Inventarios
+            .Join(
+                context.Productos,
+                inventario => inventario.IdProducto,
+                producto => producto.Id,
+                (inventario, producto) => new
+                {
+                    IdProducto = producto.Id,
+                    Nombre = producto.Nombre,
+                    Marca = producto.Marca,
+                    Sku = producto.Sku,
+                    Existencia = inventario.Existencia,
+                    Reservado = inventario.Reservado,
+                    Disponible = inventario.Existencia - inventario.Reservado
+                })
+                .ToListAsync();
+        
+        return Results.Ok(inventario);
 
+    });
+ 
 /*------------------------------------------------------------------------------------------------------------------*/
 /*--- Configuración de las rutas POST para mandar iformación de productos a la base de datos a través de la API.---*/
 /*----------------------------------------------------------------------------------------------------------------*/
@@ -312,14 +335,77 @@ app.MapPost("/productos/{id}/precios", async (int id, PrecioProductoRequest requ
 
     }
 });
-app.Run();
 
- /*if (request.Precio < 0)
+/*---Configuración de la ruta POST para registrar existencias en el sistema---*/
+
+app.MapPost("/inventario/{idProducto}/entradas", async (int idProducto, CantidadRequest request, ProGearDbContext context) =>
+{
+   if (idProducto <= 0 )
+    {
+        return Results.BadRequest(new ErrorResponse
         {
-            return Results.BadRequest(new ErrorResponse
-            {
-                Exito = false,
-                Codigo = "INVALID_PRODUCT_PRICE",
-                Mensaje = "El precio del producto no puede ser menor que cero."
-            });
-        }*/
+            Exito = false,
+            Codigo ="INVALID_PRODUCT_ID",
+        Mensaje = "El identificador del producto debe ser mayor a cero."
+        });
+    }
+
+    var producto = await context.Productos.FindAsync(idProducto);
+
+    if (producto == null)
+    {
+        return Results.NotFound( new ErrorResponse
+        {
+           Exito = false,
+           Codigo = "PRODUCT_NOT_FOUND",
+           Mensaje = "No encontramos un producto con el identificador proporcionado."
+        });
+    }
+
+    if (request.Cantidad <= 0)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+            Exito = false,
+            Codigo = "INVALID_INVENTORY_QUANTITY",
+            Mensaje = "La cantidad debe ser mayor a cero."
+        });
+    }
+
+    var inventario = await context.Inventarios
+        .SingleOrDefaultAsync(i => i.IdProducto == idProducto);
+
+    if (inventario == null)
+    {
+        inventario = new Inventario
+        {
+            IdProducto = idProducto,
+            Existencia = request.Cantidad,
+            Reservado = 0
+        };
+
+        context.Inventarios.Add(inventario);
+
+    }
+    else
+    {
+        inventario.Existencia += request.Cantidad;
+    }
+
+    await context.SaveChangesAsync();
+
+    var response = new InventarioResponse
+    {
+        IdProducto = producto.Id,
+        Nombre = producto.Nombre,
+        Marca = producto.Marca,
+        Sku = producto.Sku,
+        Existencia = inventario.Existencia,
+        Reservado = inventario.Reservado,
+        Disponible = inventario.Existencia - inventario.Reservado
+    };
+
+    return Results.Created($"/inventario/{idProducto}", response);
+});
+
+app.Run();
