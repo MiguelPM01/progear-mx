@@ -31,6 +31,22 @@ El desarrollo será incremental y cada funcionalidad deberá pasar por:
 
 ---
 
+### Pruebas manuales iniciales — API y middleware
+
+Las notas de progreso desde el arranque registran pruebas de respuestas
+`400`, `404` y `500` para el manejo global de errores, además de una request
+de creación de producto con datos faltantes. Los endpoints, payloads y
+resultados detallados de esos primeros ejercicios no están conservados con
+identificadores de caso; se documenta la cobertura general sin atribuirles
+comportamientos más específicos.
+
+| Evidencia conservada | Resultado registrado |
+|---|---|
+| Respuestas de error `400`, `404` y `500` | Se probaron como parte del trabajo inicial de `ErrorHandlingMiddleware`; no se conserva el detalle por endpoint. |
+| Alta de producto con datos faltantes | Request probada desde Postman; los datos exactos y su response no están preservados en el registro actual. |
+
+---
+
 ## 3. Producto
 
 El sistema debe permitir:
@@ -50,15 +66,39 @@ El sistema debe permitir:
 - El precio no se almacenará directamente en Producto.
 - El precio vigente se obtiene del historial de precios.
 
-### Estado de implementación — 2026-10-06
+### Estado de implementación — 2026-10-09
 
 El vertical actual de productos ya está conectado a SQL Server mediante Entity
 Framework Core. La API permite consultar todos los productos, consultar uno por
 identificador y crear productos. La creación valida nombre, SKU y SKU duplicado;
 el identificador lo genera SQL Server. `HistorialPrecio` cuenta con consultas
 GET, consulta por registro y alta/cambio de precio mediante POST. `Inventario`
-ya cuenta con consulta general y registro de entradas; las demás operaciones
-siguen pendientes.
+cuenta con consulta general y específica, entradas, reservas y salidas. La
+liberación de reservas sigue pendiente.
+
+### Pruebas manuales de Producto
+
+La evidencia conservada en las notas de progreso incluye creación válida,
+identificadores generados `6` y `7`, SKU duplicado, nombre vacío, SKU vacío y
+una request incompleta. También se compararon resultados entre Postman,
+navegador y consultas directas a SQL Server. Los resultados detallados de la
+request incompleta no están preservados, así que no se asigna aquí un código
+HTTP ni un código de error a ese caso.
+
+| Caso documentado | Resultado respaldado por código y notas |
+|---|---|
+| Alta válida por `POST /productos` | `201 Created`; SQL Server asignó los identificadores confirmados `6` y `7`. |
+| `Nombre` vacío o solo espacios | `400 Bad Request`, `INVALID_PRODUCT_NAME`. |
+| `Sku` vacío o solo espacios | `400 Bad Request`, `INVALID_PRODUCT_SKU`. |
+| SKU duplicado | `409 Conflict`, `DUPLICATED_SKU`. |
+| Request incompleta | Se probó; el detalle exacto de la respuesta no quedó registrado. |
+| Verificación cruzada | Los datos observados en Postman, navegador y consultas SQL Server coincidieron para los casos revisados. |
+
+La API actual no recibe un precio dentro de `POST /productos`; el precio se
+registra por separado en `HistorialPrecio`. El handler actual de
+`GET /productos/{id}` contiene el literal `PRODUCT_NOT_fOUND` (con `f`
+minúscula) para el caso no encontrado; ese contrato debe alinearse con
+`PRODUCT_NOT_FOUND` y verificarse en una sesión posterior.
 
 ---
 
@@ -185,64 +225,150 @@ condición artificial se eliminó y una prueba normal posterior devolvió
 
 ## 5. Inventario
 
-El inventario representa el estado actual de las existencias de un producto.
+El inventario representa las existencias físicas y las unidades apartadas
+temporalmente para una operación.
 
-### Datos
+### Datos y reglas
 
-- Existencia
-- Reservado
+- Un producto puede existir sin registro de inventario y puede tener como
+  máximo una fila de inventario.
+- `Existencia >= 0` y `Reservado >= 0`.
+- `Reservado <= Existencia`.
+- `Disponible = Existencia - Reservado`; `Disponible` se calcula, no se
+  almacena.
+- Un inventario ausente significa que no se registró stock; una fila con
+  `Existencia = 0` significa que sí existe un registro sin unidades.
 
-La disponibilidad se calcula como:
+### Operaciones HTTP implementadas — 2026-10-09
 
-`Disponible = Existencia - Reservado`
-
-### Reglas
-
-- Un producto puede existir sin registro de inventario.
-- Un producto puede tener como máximo un registro de inventario.
-- `Existencia` no puede ser negativa.
-- `Reservado` no puede ser negativo.
-- `Reservado` no puede superar la existencia.
-- No se almacena `Disponible`; se calcula a partir de los datos existentes.
-
-### Operaciones HTTP implementadas — 2026-10-08
+En los endpoints de inventario, un `idProducto` no positivo produce
+`400 Bad Request` con `INVALID_PRODUCT_ID`, y un producto inexistente produce
+`404 Not Found` con `PRODUCT_NOT_FOUND`. Las operaciones que necesitan una fila
+de inventario existente responden `404 Not Found` con `INVENTORY_NOT_FOUND` si
+no la encuentran; la primera entrada es la excepción porque crea la fila.
 
 #### `GET /inventario`
 
-Devuelve los registros de inventario relacionados con un producto mediante un
-`Join`. Un producto sin registro de inventario no aparece en esta colección.
+Devuelve los resúmenes de inventario que tienen producto relacionado mediante
+un `Join`. Un producto sin fila de inventario no aparece. La respuesta incluye
+`IdProducto`, `Nombre`, `Marca`, `Sku`, `Existencia`, `Reservado` y
+`Disponible`.
 
-La respuesta contiene `IdProducto`, `Nombre`, `Marca`, `Sku`, `Existencia`,
-`Reservado` y `Disponible`, donde `Disponible` se calcula como
-`Existencia - Reservado`.
+#### `GET /inventario/{idProducto}`
+
+Devuelve el resumen de un producto y su inventario. Responde `400 Bad Request`
+con `INVALID_PRODUCT_ID` para un identificador no positivo; `404 Not Found`
+con `PRODUCT_NOT_FOUND` si el producto no existe; y `404 Not Found` con
+`INVENTORY_NOT_FOUND` si existe el producto pero no tiene fila de inventario.
+En caso válido, responde `200 OK` con `InventarioResponse`.
 
 #### `POST /inventario/{idProducto}/entradas`
 
-Registra una entrada de mercancía para un producto existente.
+Requiere `Cantidad > 0`; responde `400 Bad Request` con
+`INVALID_INVENTORY_QUANTITY` si no se cumple. Si el producto aún no tiene
+inventario, crea la fila con `Existencia = Cantidad` y `Reservado = 0`. Si ya
+existe, suma `Cantidad` a `Existencia` y conserva `Reservado`. Devuelve
+`201 Created` con el estado resultante.
 
-- `400 Bad Request` con `INVALID_PRODUCT_ID` si `idProducto` no es mayor que
-  cero.
-- `404 Not Found` con `PRODUCT_NOT_FOUND` si no existe el producto.
-- `400 Bad Request` con `INVALID_INVENTORY_QUANTITY` si `Cantidad` no es mayor
-  que cero.
-- Si no existe un registro de inventario, crea uno con `Reservado = 0`.
-- Si ya existe, incrementa `Existencia` y conserva `Reservado`.
-- `201 Created` devuelve el estado resultante como `InventarioResponse`.
+#### `POST /inventario/{idProducto}/reservas`
 
-### Registro de pruebas manuales — PEI
+Requiere producto e inventario existentes, `Cantidad > 0` y
+`Cantidad <= Disponible`. Si la cantidad supera la disponibilidad, responde
+`400 Bad Request` con `INSUFFICIENT_AVAILABLE_STOCK`; si no es positiva,
+responde `400 Bad Request` con `INVALID_INVENTORY_QUANTITY`. Una reserva válida
+mantiene `Existencia`, incrementa `Reservado` y recalcula `Disponible`. La
+respuesta observada es `200 OK` con `InventarioResponse`.
+
+#### `POST /inventario/{idProducto}/salidas`
+
+Requiere producto e inventario existentes, `Cantidad > 0` y
+`Cantidad <= Reservado`. Si la cantidad supera lo reservado, responde
+`400 Bad Request` con `INSUFFICIENT_RESERVED_STOCK`; si no es positiva,
+responde `400 Bad Request` con `INVALID_INVENTORY_QUANTITY`. Una salida válida
+reduce `Existencia` y `Reservado` por la misma cantidad, y devuelve `200 OK`
+con `InventarioResponse`.
+
+Los handlers validan antes de cambiar entidades y guardar. Las pruebas
+registradas confirman que los casos rechazados de salidas no alteraron el
+stock. Para otras respuestas de error, el estado se afirma solo cuando se
+consultó después con un GET.
+
+#### Liberación de reserva — diseño acordado, pendiente
+
+`POST /inventario/{idProducto}/liberaciones` aún no está implementado. Al
+implementarlo, debe exigir `Cantidad > 0` y `Cantidad <= Reservado`. Si se
+solicitan 5 unidades y solo hay 3 reservadas, debe devolver `400 Bad Request`
+con un `ErrorResponse` coherente, por ejemplo
+`INSUFFICIENT_RESERVED_STOCK`, sin modificar el inventario. Una liberación
+válida solo reduce `Reservado`; `Existencia` permanece igual y
+`Disponible` aumenta por la cantidad liberada. El comportamiento y su código
+HTTP de éxito aún no están implementados ni probados.
+
+### Registro de pruebas manuales — Inventario
+
+Los prefijos se reutilizan en módulos diferentes. Cada subsección fija el
+módulo de los identificadores, por lo que `PEG-001` o `PEP-001` no son
+identificadores globales únicos. Las pruebas aquí registradas fueron manuales.
+
+#### Consultas — PEG, módulo Inventario (`GET /inventario/{idProducto}`)
+
+| ID | Caso | Resultado observado |
+|---|---|---|
+| PEG-001 | Producto `1` con inventario | `200 OK` con nombre, marca, SKU, existencia, reservado y disponible. |
+| PEG-002 | Producto inexistente | `404 Not Found`; la nota de prueba contiene una transcripción inicial con el código mal escrito. El handler actual declara `PRODUCT_NOT_FOUND`. |
+| PEG-003 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
+| PEG-004 | Producto `5` existe, sin fila de inventario | `404 Not Found`, `INVENTORY_NOT_FOUND`. |
+
+#### Entradas — PEI, módulo Inventario
 
 Convención: `PEI` significa **Prueba Endpoint Inventario**.
 
 | ID | Caso | Resultado observado |
 |---|---|---|
-| PEI-001 | Primera entrada de 10 unidades | `201 Created`; se creó el inventario con `Existencia = 10`, `Reservado = 0` y `Disponible = 10`. |
-| PEI-002 | Entrada adicional de 5 unidades | `201 Created`; `Existencia` pasó a 15 sin crear otro registro. |
+| PEI-001 | Primera entrada de 10 unidades | `201 Created`; `Existencia = 10`, `Reservado = 0`, `Disponible = 10`. |
+| PEI-002 | Entrada adicional de 5 unidades | `201 Created`; `Existencia = 15` sin crear otro registro. |
 | PEI-003 | Cantidad `0` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
 | PEI-004 | Cantidad `-5` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
 | PEI-005 | `idProducto = -1` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
 | PEI-006 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
 | PEI-007 | Producto inexistente | `404 Not Found`, `PRODUCT_NOT_FOUND`. |
-| PEI-008 | Entrada con una reserva existente | Pendiente hasta implementar el endpoint de reservas. |
+| PEI-008 | Entrada con una reserva existente | Pendiente; no se conserva un resultado de prueba. |
+
+#### Reservas — PEP, módulo Reservas de Inventario
+
+| ID | Caso | Resultado observado |
+|---|---|---|
+| PEP-001 | Producto `1`: reservar 4 y luego 7, con 15 de existencia | Ambas requests dieron `200 OK`; el estado pasó de `15/4/11` a `15/11/4` (`Existencia/Reservado/Disponible`). |
+| PEP-002 | Producto `4`: reservar las 12 unidades existentes | `200 OK`; `Disponible = 0`. |
+| PEP-003 | Producto `3`: reservar más de las 15 unidades disponibles | `400 Bad Request`, `INSUFFICIENT_AVAILABLE_STOCK`. |
+| PEP-004 | Cantidad `0` en producto `3` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
+| PEP-005 | Cantidad `-7` en producto `3` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
+| PEP-006 | Producto `8` existe, sin fila de inventario | `404 Not Found`, `INVENTORY_NOT_FOUND`. |
+| PEP-007 | Producto inexistente `9` | `404 Not Found`, `PRODUCT_NOT_FOUND`. |
+| PEP-008 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
+| PEP-009 | Producto `3`: solicitar reserva de 17 con existencia 15 | `400 Bad Request`, `INSUFFICIENT_AVAILABLE_STOCK`; el GET posterior confirmó `15/0/15`, sin cambios. |
+
+#### Salidas — PEP, módulo Salidas de Inventario
+
+| ID | Caso | Resultado observado |
+|---|---|---|
+| PEP-001 | Producto `3`: con `15/7/8`, dar salida a 5 | `200 OK`; quedó `10/2/8` (`Existencia/Reservado/Disponible`). |
+| PEP-002 | Producto `8`: con `7/7/0`, dar salida a 7 | `200 OK`; quedó `0/0/0`. |
+| PEP-003 | Producto `8`: con `7/7/0`, intentar salida de 8 | `400 Bad Request`, `INSUFFICIENT_RESERVED_STOCK`; el GET posterior confirmó `7/7/0`, sin cambios. |
+| PEP-004 | Producto `8`: con `7/7/0`, cantidad `0` | `400 Bad Request`; el GET posterior confirmó que el inventario no cambió. |
+| PEP-005 | Producto `8`: con `7/7/0`, cantidad `-5` | `400 Bad Request`; el GET posterior confirmó que el inventario no cambió. |
+
+En las notas originales de `PEP-004` y `PEP-005`, el código se transcribió como
+`INVLID_INVENTORY_QUANTITY`. El handler actual usa
+`INVALID_INVENTORY_QUANTITY`; el status y la conservación del inventario sí
+quedaron registrados, pero el código exacto de esas dos responses requiere
+reconciliarse con una nueva request.
+
+#### Historial de precios — PEG/PEP, módulo HistorialPrecio
+
+`PEG-001` a `PEG-009`, `PEP-010` a `PEP-015` y la prueba controlada de rollback
+se mantienen en la sección 4 de este documento. Sus identificadores pertenecen
+a ese módulo y son independientes de las matrices de Inventario.
 
 ---
 
@@ -272,6 +398,10 @@ El flujo conceptual de una venta es:
 ## 7. Reservas
 
 Una venta puede reservar inventario antes de concretarse.
+
+Las reglas siguientes describen el comportamiento requerido del dominio. La
+API actualmente implementa crear reservas y confirmar salidas; liberar una
+reserva todavía no tiene endpoint.
 
 ### Reglas
 

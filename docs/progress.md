@@ -2,53 +2,77 @@
 
 ## Alcance actual
 
-ProGear MX es un proyecto de aprendizaje y portafolio cuyo primer vertical es una API REST de gestión de productos. El objetivo inmediato es completar y validar Product Management antes de ampliar el sistema con ventas, autenticación, frontend, nube u otras capacidades.
+ProGear MX es un proyecto de aprendizaje y portafolio. El vertical actual
+cubre el catálogo de productos, el historial de precios y las operaciones
+básicas de inventario. Ventas, autenticación, frontend y nube quedan fuera del
+alcance inmediato.
 
-## Completado o trabajado en la sesión documentada
+## Completado o trabajado
 
-- Se construyó el esqueleto de `ErrorHandlingMiddleware`.
-- Se entendió el papel de `RequestDelegate`, `_next`, `HttpContext` y `InvokeAsync`.
-- Se implementó el flujo `try/catch` alrededor de `await _next(context)`.
-- Se construyó un `ErrorResponse` con `Exito`, `Codigo` y `Mensaje`.
-- Se serializó el error a JSON y se escribió en la response.
-- Se corrigió el registro faltante en `Program.cs` mediante `app.UseMiddleware<ErrorHandlingMiddleware>()`.
-- Se probó el caso de una request de creación de producto con datos faltantes desde Postman.
-- Se creó la bitácora de aprendizaje y el glosario acumulativo.
-- Se documentó el flujo de Git: working directory, staging, commit, push,
-  `origin/main`, branches, `switch`, `switch -c`, `merge`, `branch -d` y
-  upstream mediante `-u`.
-- Se mejoró la presentación del repositorio con una descripción, alcance
-  actual, tecnologías, estructura y forma de ejecución local.
-- Se conectó la API a SQL Server mediante Entity Framework Core.
-- Se configuró `ProGearDbContext` y el mapeo de `Producto`, `Inventario` e
-  `HistorialPrecio` mediante `OnModelCreating`.
-- Se sustituyó la consulta en memoria por `ToListAsync()` para el GET general y
-  `FindAsync(id)` para la consulta por identificador.
-- Se actualizó la creación de productos para usar `Add` y `SaveChangesAsync()`;
-  SQL Server genera el identificador mediante `IDENTITY`.
-- Se eliminó la lista local de productos y `siguienteId`.
-- Se verificaron casos válidos y de error desde Postman, navegador y consultas
-  directas a SQL Server, comprobando que los resultados coinciden.
-- Se implementó `GET /inventario` mediante un `Join` entre `Inventario` y
-  `Producto`, calculando `Disponible` sin almacenarlo.
-- Se implementó `POST /inventario/{idProducto}/entradas` para crear el registro
-  de inventario o incrementar `Existencia` cuando ya existe.
-- Se documentaron las validaciones `INVALID_PRODUCT_ID`, `PRODUCT_NOT_FOUND` e
-  `INVALID_INVENTORY_QUANTITY`, junto con las pruebas manuales `PEI-001` a
-  `PEI-007`; `PEI-008` permanece pendiente.
+- API ASP.NET Core Minimal API conectada a SQL Server mediante Entity Framework
+  Core; `ProGearDbContext` mapea `Producto`, `Inventario` e `HistorialPrecio`.
+- Consulta y alta de productos persistidas con EF Core; SQL Server genera el
+  identificador mediante `IDENTITY`. No hay rutas actuales de actualización o
+  eliminación de productos.
+- Consultas de historial, precio vigente y registro individual de precio; alta
+  y cambio transaccional de precio con `CommitAsync()` y `RollbackAsync()`.
+- Inventario: `GET /inventario`, `GET /inventario/{idProducto}`, entradas,
+  reservas y salidas. `Disponible` se calcula como `Existencia - Reservado`.
+- Reglas implementadas: cantidad de operación positiva; una reserva no supera
+  `Disponible`; una salida no supera `Reservado`; una salida válida reduce
+  `Existencia` y `Reservado` por la misma cantidad.
+- Se conservan `ErrorHandlingMiddleware`, `ErrorResponse` y las validaciones
+  de catálogo documentadas desde sesiones anteriores.
+- Se verificaron casos de producto mediante Postman, navegador y consultas
+  directas a SQL Server. El detalle disponible de todas las pruebas manuales
+  está agrupado por módulo en
+  [`docs/requirements/requirements.md`](requirements/requirements.md).
 
 ## Estado actual
 
-**Fase:** Modelado de dominio y base de datos
+**Fase:** Operaciones de inventario
 
-**Estado:** En progreso — `HistorialPrecio` cerrado; primera entrega de
-`Inventario` completada; reservas y operaciones posteriores pendientes.
+**Estado:** En progreso — catálogo e `HistorialPrecio` están documentados como
+completados. `Inventario` ya permite consultar, ingresar, reservar y dar salida
+a existencias. El endpoint de liberación sigue pendiente de implementar y
+probar.
 
-La persistencia básica del catálogo de productos ya está funcionando. También
-se completaron las consultas, el registro/cambio de precio y la validación
-controlada de transacción de `HistorialPrecio`. En la sesión del 2026-10-08 se
-implementaron la consulta general de inventario y las entradas de mercancía;
-las pruebas documentadas de ambos cierres fueron manuales.
+Las pruebas documentadas hasta el 2026-10-09 son manuales. Los identificadores
+`PEG` y `PEP` se reutilizan entre módulos y por ello cada matriz indica su
+módulo; no deben leerse como una sola secuencia global.
+
+## Sesión documentada — 2026-10-09
+
+- [x] Implementar y probar `GET /inventario/{idProducto}`.
+- [x] Implementar `POST /inventario/{idProducto}/reservas`: mantener
+  `Existencia`, aumentar `Reservado` y rechazar cantidades mayores que
+  `Disponible`.
+- [x] Implementar `POST /inventario/{idProducto}/salidas`: reducir
+  `Existencia` y `Reservado` solo si la cantidad no supera `Reservado`.
+- [x] Registrar pruebas de consulta `PEG-001` a `PEG-004` del módulo
+  `Inventario`.
+- [x] Registrar pruebas de reservas `PEP-001` a `PEP-009` y de salidas
+  `PEP-001` a `PEP-005`, separadas por operación.
+- [x] Confirmar con una consulta GET que las salidas rechazadas por cantidad
+  insuficiente, cero o negativa no cambiaron las existencias ni las reservas.
+- [ ] Implementar y probar `POST /inventario/{idProducto}/liberaciones`.
+- [ ] Resolver `PEI-008`, que sigue pendiente como prueba de entrada con una
+  reserva existente.
+
+### Aprendizaje del flujo
+
+Una reserva reduce `Disponible` sin tocar la existencia física. Una salida
+confirmada reduce tanto la existencia como la reserva. Una liberación pendiente
+debe reducir únicamente `Reservado`, después de validar una cantidad positiva
+que no supere lo reservado; así se recupera disponibilidad sin alterar el
+stock físico. Los detalles y límites de cada prueba están en la matriz de
+requerimientos.
+
+### Cierre de la sesión
+
+Las consultas, reservas y salidas de inventario quedan implementadas y con
+pruebas manuales registradas. La liberación continúa pendiente; su regla está
+documentada como diseño acordado, no como comportamiento ya disponible.
 
 ## Sesión documentada — 2026-10-08
 
@@ -61,7 +85,8 @@ las pruebas documentadas de ambos cierres fueron manuales.
 - [x] Validar identificador, producto inexistente y cantidad no positiva con
   `ErrorResponse`.
 - [x] Registrar las pruebas manuales `PEI-001` a `PEI-007`.
-- [ ] Ejecutar `PEI-008`, pendiente hasta implementar reservas.
+- [ ] Ejecutar `PEI-008`; quedó pendiente al cierre del 2026-10-08 y sigue sin
+  resultado registrado al 2026-10-09.
 
 ### Cierre de la sesión
 
@@ -221,24 +246,20 @@ específicas implementadas en la API.
 
 ## Próximo bloque
 
-### Base de datos
+### Inventario
 
-- [x] Revisar reglas de integridad del modelo inicial
-- [x] Definir la regla de un único precio vigente mediante índice único filtrado
-- [x] Probar el cambio de precio con transacción en SQL Server
-- [ ] Crear esquema SQL Server
-- [ ] Crear tablas
-- [ ] Definir restricciones
-- [ ] Revisar índices
-- [x] Configurar EF Core
-- [x] Crear entidades persistentes
-- [x] Crear DbContext
-- [ ] Ejecutar migraciones
-- [x] Sustituir almacenamiento en memoria por SQL Server para productos
-- [x] Implementar consultas GET de HistorialPrecio en la API
-- [x] Implementar cambio de precio en la API
-- [x] Implementar consulta general y entradas de Inventario en la API
-- [ ] Implementar consulta individual, reservas, salidas y liberaciones de Inventario
+- [ ] Implementar y probar `POST /inventario/{idProducto}/liberaciones`.
+- [ ] Resolver `PEI-008` y registrar su resultado.
+- [ ] Repetir `PEP-004` y `PEP-005` de salidas para confirmar el código de error exacto.
+
+### Alineación técnica
+
+- [ ] Alinear el código de error del producto inexistente en
+  `GET /productos/{id}` con `PRODUCT_NOT_FOUND` y verificar la respuesta.
+- [ ] Reconciliar la restricción SQL que permite precio cero con la validación
+  actual de la API, que rechaza precios menores o iguales a cero.
+- [ ] Reconciliar el script SQL versionado con el mapeo EF Core y confirmar el
+  estado de despliegue/migraciones.
 
 ---
 

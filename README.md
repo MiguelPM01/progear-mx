@@ -6,32 +6,37 @@ ProGear MX es un proyecto de aprendizaje práctico y portafolio. Su primer
 vertical es Product Management: modelar productos, consultarlos y validar su
 creación mientras se construye una base sólida de ingeniería de software.
 
-## Estado actual
+## Estado actual — 2026-10-09
 
-La API trabaja actualmente con productos persistidos en SQL Server mediante
-Entity Framework Core. Ya cuenta con:
+La API ASP.NET Core Minimal API usa Entity Framework Core y SQL Server. El
+catálogo permite consultar productos y registrar productos nuevos; el precio
+se conserva en `HistorialPrecio`. Las rutas actualmente implementadas son:
 
-- consulta de todos los productos: `GET /productos`;
-- consulta por identificador: `GET /productos/{id}`;
-- consulta del historial de precios: `GET /productos/{id}/precios/historial`;
-- consulta del precio vigente: `GET /productos/{id}/precio`;
-- consulta de un registro de precio: `GET /productos/{id}/precios/{precioId}`;
-- registro y cambio de precio: `POST /productos/{id}/precios`;
-- consulta del inventario registrado: `GET /inventario`;
-- registro de entradas de mercancía: `POST /inventario/{idProducto}/entradas`;
-- creación validada: `POST /productos`;
-- validación de nombre y SKU no vacíos;
-- validación de SKU duplicado;
-- manejo inicial de errores mediante middleware.
+- `GET /productos` y `GET /productos/{id}`;
+- `POST /productos`;
+- `GET /productos/{id}/precios/historial`;
+- `GET /productos/{id}/precio`;
+- `GET /productos/{id}/precios/{precioId}`;
+- `POST /productos/{id}/precios`, con cierre del precio anterior y alta del
+  nuevo dentro de una transacción;
+- `GET /inventario` y `GET /inventario/{idProducto}`;
+- `POST /inventario/{idProducto}/entradas`;
+- `POST /inventario/{idProducto}/reservas`;
+- `POST /inventario/{idProducto}/salidas`.
 
-La lista local de productos y el identificador manual fueron eliminados. La
-API ya consulta e inserta productos en la base de datos; SQL Server genera el
-identificador mediante `IDENTITY`. Inventario e historial de precios ya tienen
-modelos y mapeos en EF Core. `HistorialPrecio` cuenta con consultas, registro y
-cambio transaccional de precio. Inventario ya permite consultar los registros
-existentes y registrar entradas de mercancía; las reservas, salidas, liberaciones
-y la consulta individual quedan pendientes. Ventas, autenticación, frontend y
-otras capacidades quedan fuera del vertical actual.
+`Inventario` conserva `Existencia` y `Reservado`; `Disponible` se calcula como
+`Existencia - Reservado`. Las entradas requieren una cantidad positiva, las
+reservas no pueden superar la disponibilidad y las salidas no pueden superar
+lo reservado. Las solicitudes rechazadas responden con `ErrorResponse` antes
+de guardar cambios. El endpoint de liberación aún está pendiente: al
+implementarlo, validará una cantidad positiva que no supere `Reservado` y solo
+reducirá `Reservado`, sin modificar la existencia física.
+
+SQL Server genera los identificadores de producto mediante `IDENTITY`. La API
+no incluye actualmente rutas de actualización o eliminación de productos. Las
+pruebas registradas son manuales; su matriz por módulo se mantiene en
+[`docs/requirements/requirements.md`](docs/requirements/requirements.md).
+Ventas, autenticación y frontend siguen fuera del vertical actual.
 
 ## Tecnologías
 
@@ -43,8 +48,8 @@ otras capacidades quedan fuera del vertical actual.
 ## Estructura
 
 ```text
-ProGear.api/       API y lógica actual del catálogo
-docs/              Cuaderno, glosario y progreso de aprendizaje
+ProGear.api/       API y lógica actual del catálogo e inventario
+docs/              Requerimientos, diseño técnico, pruebas y notas de aprendizaje
 ProGear.slnx       Solution de .NET
 ```
 

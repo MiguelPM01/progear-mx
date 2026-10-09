@@ -118,3 +118,10 @@
 | Response DTO | DTO que representa los datos que la API devuelve en una response. |
 | InventarioResponse | DTO de salida que combina datos de Producto, Inventario y Disponible calculado. |
 | CantidadRequest | DTO de entrada reutilizable que recibe la cantidad de una operación de inventario. |
+| Reservation / reserva | Aparta temporalmente parte de `Disponible` para una operación. No reduce la existencia física; aumenta `Reservado`. |
+| Release / liberación de reserva | Devuelve unidades reservadas a la disponibilidad. Reduce `Reservado` y conserva `Existencia`; el endpoint de ProGear MX está pendiente. |
+| Stock issue / salida de inventario | Confirma la salida de unidades reservadas. Reduce `Existencia` y `Reservado` por la misma cantidad. |
+| `INSUFFICIENT_AVAILABLE_STOCK` | Error de inventario cuando la cantidad solicitada para una reserva supera `Disponible`. |
+| `INSUFFICIENT_RESERVED_STOCK` | Error de inventario cuando una salida o futura liberación solicita más unidades que las reservadas. |
+| Invariant / invariante | Condición que debe mantenerse siempre en los datos; aquí `Existencia >= 0`, `Reservado >= 0` y `Reservado <= Existencia`. |
+| No mutation on rejected request | Regla por la que una solicitud inválida devuelve `ErrorResponse` antes de guardar cambios; las pruebas de salidas confirmaron que las cantidades no cambiaron en los rechazos revisados. |
