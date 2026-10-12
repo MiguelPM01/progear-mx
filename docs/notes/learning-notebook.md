@@ -487,7 +487,8 @@ if (request.Precio < 0)
 **Qué aprendí:** Una regla de negocio se convierte en una condición concreta del código. `string.IsNullOrWhiteSpace` cubre `null`, `""` y espacios; `request.Precio < 0` permite exactamente el valor `0`.
 
 ---
-# Bitácora de aprendizaje — 2026-09-23
+
+# Sesión - 23 de septiembre de 2026
 
 ## Objetivo de la sesión
 
@@ -830,199 +831,6 @@ Construimos → probamos → reflexionamos → documentamos → cerramos.
 
 ---
 
-## Sesión — 9 de octubre de 2026
-
-### Tema y objetivo
-
-Completar y probar la consulta individual de inventario, las reservas y las
-salidas. Cerrar el día con la regla acordada para liberar una reserva, dejando
-claro que esa ruta todavía no está implementada.
-
-### Consultar un inventario específico
-
-`GET /inventario/{idProducto}` busca primero el producto y luego su fila de
-inventario. Son dos situaciones distintas: un producto que no existe y un
-producto existente al que todavía no se le registró inventario. El primer caso
-responde `PRODUCT_NOT_FOUND`; el segundo, `INVENTORY_NOT_FOUND`.
-
-En la colección `GET /inventario`, un `Join` muestra los registros que tienen
-correspondencia con un producto. Por eso un producto sin fila no aparece en la
-lista, mientras que un inventario con existencia cero sí es un registro real.
-
-### Reserva y disponibilidad
-
-**Términos en inglés:** `reservation`, `available stock`, `invariant`,
-`ErrorResponse`.
-
-**Explicación sencilla:** reservar aparta unidades que siguen físicamente en
-existencia. La reserva reduce lo que todavía puedo ofrecer, no el stock físico.
-
-Las reglas que apliqué fueron:
-
-- `Cantidad > 0`.
-- `Cantidad <= Disponible`.
-- `Existencia` queda igual.
-- `Reservado` aumenta por la cantidad solicitada.
-- `Disponible = Existencia - Reservado` se vuelve a calcular.
-
-**Cómo lo razoné:** Con `Existencia = 15` y `Reservado = 4`, hay `11`
-disponibles. Si reservo otras `7`, no retiro físicamente las piezas: termino
-con `Existencia = 15`, `Reservado = 11` y `Disponible = 4`.
-
-**Ejemplo observado en PEP-001 de Reservas:**
-
-```text
-15 / 4 / 11  -- reservar 7 -->  15 / 11 / 4
-Existencia      Reservado       Disponible
-```
-
-Si la cantidad supera `Disponible`, la API devuelve `400 Bad Request` con
-`INSUFFICIENT_AVAILABLE_STOCK`, sin continuar con el incremento. `PEP-009` de
-Reservas pidió 17 con 15 disponibles; la consulta GET posterior confirmó que
-el estado permanecía `15 / 0 / 15`.
-
-### Salida de inventario
-
-**Términos en inglés:** `stock issue`, `reserved stock`, `state transition`.
-
-**Explicación sencilla:** una salida confirma que se consumen unidades que ya
-estaban apartadas. Por eso se descuenta la misma cantidad de la existencia
-física y de las reservas.
-
-**Cómo lo razoné:** La validación de salida no se compara con `Disponible` ni
-solo con `Existencia`; se compara con `Reservado`. Si solo hay 7 unidades
-reservadas, una salida de 8 debe rechazarse. Si la salida es válida, ambos
-valores bajan juntos.
-
-```text
-15 / 7 / 8  -- salida 5 -->  10 / 2 / 8
-Existencia     Reservado      Disponible
-```
-
-También se observó la salida de las 7 unidades reservadas: `7 / 7 / 0` pasó a
-`0 / 0 / 0`. Al pedir una salida de 8 con solo 7 reservadas, la respuesta fue
-`400 Bad Request` con `INSUFFICIENT_RESERVED_STOCK`. El GET posterior confirmó
-que seguían `7 / 7 / 0`. Las requests con cero y con `-5` también devolvieron
-`400`; la consulta posterior confirmó que las cantidades seguían intactas.
-
-### La liberación que falta
-
-**Términos en inglés:** `release`, `reserved quantity`, `physical stock`.
-
-**Mi decisión:** antes de cambiar el estado hay que validar la cantidad para
-evitar errores de consistencia. Para liberar 5 con solo 3 reservadas, se debe
-rechazar la request con `400 Bad Request` y dejar los datos igual. Una
-liberación válida baja `Reservado`, pero deja `Existencia` intacta; así aumenta
-`Disponible` sin fingir que entró o salió mercancía.
-
-```text
-Existencia = 10, Reservado = 3, Disponible = 7
-liberar 2 -> Existencia = 10, Reservado = 1, Disponible = 9
-liberar 5 -> 400; el estado permanece 10 / 3 / 7
-```
-
-El endpoint `POST /inventario/{idProducto}/liberaciones` y sus pruebas quedan
-pendientes. `PEI-008`, la entrada cuando ya existe una reserva, también sigue
-sin resultado registrado.
-
-### Pruebas y evidencia
-
-Las pruebas fueron manuales. Los IDs se agrupan por módulo en
-`docs/requirements/requirements.md`: `PEG-001` a `PEG-004` para consulta de
-Inventario; `PEI-001` a `PEI-007` para entradas; `PEP-001` a `PEP-009` para
-reservas; y `PEP-001` a `PEP-005` para salidas. Se repiten PEG/PEP en otros
-módulos, así que el nombre del módulo acompaña siempre al identificador.
-
-En las notas de `PEP-004` y `PEP-005` de salidas el código quedó transcrito
-como `INVLID_INVENTORY_QUANTITY`, pero el handler actual usa
-`INVALID_INVENTORY_QUANTITY`. El status `400` y la conservación del inventario
-se comprobaron; queda repetir esas requests para confirmar el código exacto.
-
-### Qué aprendí
-
-- Una reserva consume disponibilidad, pero no cambia la existencia física.
-- Una salida reduce existencia y reservas por la misma cantidad; tiene que
-  caber dentro de lo reservado.
-- Una liberación recupera disponibilidad al reducir solo las reservas.
-- Validar antes de modificar y guardar evita dejar cantidades inconsistentes.
-- Un GET posterior permite comprobar con datos observables si una request
-  rechazada dejó intacto el inventario.
-
-### Cierre
-
-Las consultas individuales, reservas y salidas quedaron implementadas y con
-pruebas manuales registradas. La liberación y `PEI-008` continúan pendientes.
-
-Construimos → probamos → reflexionamos → documentamos → cerramos.
----
-
-## Sesión — 6 de octubre de 2026
-
-### Tema y objetivo
-
-Cerrar `HistorialPrecio` comprobando que las reglas definidas antes del
-desarrollo se cumplen en los cuatro endpoints trabajados y dejar preparado el
-siguiente bloque: `Inventario`.
-
-### Endpoints y reglas comprobadas
-
-- `GET /productos/{id}/precios/historial`: devuelve el historial completo; un
-  historial vacío se representa como `[]`.
-- `GET /productos/{id}/precio`: devuelve el precio con `FechaFin = NULL` o
-  `null` si el producto existe sin precio vigente.
-- `GET /productos/{id}/precios/{precioId}`: solo devuelve el registro cuando
-  pertenece al producto solicitado.
-- `POST /productos/{id}/precios`: rechaza identificadores inválidos, precios
-  menores o iguales que cero y la repetición del precio vigente; registra el
-  primer precio o cierra el vigente y crea el nuevo.
-
-### Transacción, Commit y Rollback
-
-**Términos en inglés:** transaction, atomicity, Commit, Rollback, scope.
-
-**Explicación sencilla:** Una transacción agrupa el cierre del precio anterior
-y la creación del nuevo. La atomicidad significa que el cambio completo se
-confirma o se revierte completo. `Commit` confirma; `Rollback` deshace los
-cambios no confirmados. El alcance (`scope`) ayuda a entender dentro de qué
-operación y contexto es válida una variable o regla.
-
-**Cómo lo razoné:** No bastaba con observar que existían llamadas a commit y
-rollback. Se provocó una excepción después de `SaveChangesAsync()` y antes de
-confirmar, para comprobar el estado real de la base de datos.
-
-### Prueba controlada
-
-Partiendo de `$2,100` vigente, se intentó registrar `$2,500`. La excepción
-controlada pasó por `RollbackAsync()` y el middleware devolvió `500 Internal
-Server Error`. Al consultar de nuevo, `$2,100` continuó vigente y `$2,500` no
-quedó confirmado. Después se retiró la condición artificial y una prueba normal
-posterior funcionó con `201 Created`.
-
-### Pruebas registradas
-
-Se conservaron las pruebas manuales `PEG-001` a `PEG-009` y `PEP-010` a
-`PEP-015`. `PEG` significa **Prueba Endpoint GET** y `PEP` significa **Prueba
-Endpoint POST**. La matriz con sus endpoints y resultados está en
-`docs/requirements/requirements.md`.
-
-### Conceptos aprendidos o confirmados
-
-- `DbSet` representa una entidad en el `DbContext` y permite consultar o seguir
-  sus registros.
-- `Commit` confirma una transacción y `Rollback` revierte sus cambios.
-- La prueba controlada sirve para validar una propiedad de integridad bajo una
-  falla provocada, sin confundirla con el flujo normal.
-- La evidencia de pruebas manuales permite cerrar esta funcionalidad, mientras
-  que las pruebas automatizadas quedan como mejora futura.
-
-### Cierre y siguiente bloque
-
-`HistorialPrecio` queda cerrado conforme a las reglas de negocio establecidas.
-El siguiente bloque de desarrollo es `Inventario`.
-
- Construimos → probamos → reflexionamos → documentamos → cerramos.
----
-
 ## Sesión — 1 de octubre de 2026
 
 ### Tema y objetivo
@@ -1176,6 +984,73 @@ el cambio de precio desde la API, ni transacciones nuevas, ni operaciones de
 
 Construimos → probamos → reflexionamos → documentamos → cerramos.
 
+---
+
+## Sesión — 6 de octubre de 2026
+
+### Tema y objetivo
+
+Cerrar `HistorialPrecio` comprobando que las reglas definidas antes del
+desarrollo se cumplen en los cuatro endpoints trabajados y dejar preparado el
+siguiente bloque: `Inventario`.
+
+### Endpoints y reglas comprobadas
+
+- `GET /productos/{id}/precios/historial`: devuelve el historial completo; un
+  historial vacío se representa como `[]`.
+- `GET /productos/{id}/precio`: devuelve el precio con `FechaFin = NULL` o
+  `null` si el producto existe sin precio vigente.
+- `GET /productos/{id}/precios/{precioId}`: solo devuelve el registro cuando
+  pertenece al producto solicitado.
+- `POST /productos/{id}/precios`: rechaza identificadores inválidos, precios
+  menores o iguales que cero y la repetición del precio vigente; registra el
+  primer precio o cierra el vigente y crea el nuevo.
+
+### Transacción, Commit y Rollback
+
+**Términos en inglés:** transaction, atomicity, Commit, Rollback, scope.
+
+**Explicación sencilla:** Una transacción agrupa el cierre del precio anterior
+y la creación del nuevo. La atomicidad significa que el cambio completo se
+confirma o se revierte completo. `Commit` confirma; `Rollback` deshace los
+cambios no confirmados. El alcance (`scope`) ayuda a entender dentro de qué
+operación y contexto es válida una variable o regla.
+
+**Cómo lo razoné:** No bastaba con observar que existían llamadas a commit y
+rollback. Se provocó una excepción después de `SaveChangesAsync()` y antes de
+confirmar, para comprobar el estado real de la base de datos.
+
+### Prueba controlada
+
+Partiendo de `$2,100` vigente, se intentó registrar `$2,500`. La excepción
+controlada pasó por `RollbackAsync()` y el middleware devolvió `500 Internal
+Server Error`. Al consultar de nuevo, `$2,100` continuó vigente y `$2,500` no
+quedó confirmado. Después se retiró la condición artificial y una prueba normal
+posterior funcionó con `201 Created`.
+
+### Pruebas registradas
+
+Se conservaron las pruebas manuales `PEG-001` a `PEG-009` y `PEP-010` a
+`PEP-015`. `PEG` significa **Prueba Endpoint GET** y `PEP` significa **Prueba
+Endpoint POST**. La matriz con sus endpoints y resultados está en
+`docs/requirements/requirements.md`.
+
+### Conceptos aprendidos o confirmados
+
+- `DbSet` representa una entidad en el `DbContext` y permite consultar o seguir
+  sus registros.
+- `Commit` confirma una transacción y `Rollback` revierte sus cambios.
+- La prueba controlada sirve para validar una propiedad de integridad bajo una
+  falla provocada, sin confundirla con el flujo normal.
+- La evidencia de pruebas manuales permite cerrar esta funcionalidad, mientras
+  que las pruebas automatizadas quedan como mejora futura.
+
+### Cierre y siguiente bloque
+
+`HistorialPrecio` queda cerrado conforme a las reglas de negocio establecidas.
+El siguiente bloque de desarrollo es `Inventario`.
+
+ Construimos → probamos → reflexionamos → documentamos → cerramos.
 ---
 
 # Sesión - 8 de octubre de 2026
@@ -1399,3 +1274,133 @@ Quedan pendientes:
 ### Cierre
 
 Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+
+## Sesión — 9 de octubre de 2026
+
+### Tema y objetivo
+
+Completar y probar la consulta individual de inventario, las reservas y las
+salidas. Cerrar el día con la regla acordada para liberar una reserva, dejando
+claro que esa ruta todavía no está implementada.
+
+### Consultar un inventario específico
+
+`GET /inventario/{idProducto}` busca primero el producto y luego su fila de
+inventario. Son dos situaciones distintas: un producto que no existe y un
+producto existente al que todavía no se le registró inventario. El primer caso
+responde `PRODUCT_NOT_FOUND`; el segundo, `INVENTORY_NOT_FOUND`.
+
+En la colección `GET /inventario`, un `Join` muestra los registros que tienen
+correspondencia con un producto. Por eso un producto sin fila no aparece en la
+lista, mientras que un inventario con existencia cero sí es un registro real.
+
+### Reserva y disponibilidad
+
+**Términos en inglés:** `reservation`, `available stock`, `invariant`,
+`ErrorResponse`.
+
+**Explicación sencilla:** reservar aparta unidades que siguen físicamente en
+existencia. La reserva reduce lo que todavía puedo ofrecer, no el stock físico.
+
+Las reglas que apliqué fueron:
+
+- `Cantidad > 0`.
+- `Cantidad <= Disponible`.
+- `Existencia` queda igual.
+- `Reservado` aumenta por la cantidad solicitada.
+- `Disponible = Existencia - Reservado` se vuelve a calcular.
+
+**Cómo lo razoné:** Con `Existencia = 15` y `Reservado = 4`, hay `11`
+disponibles. Si reservo otras `7`, no retiro físicamente las piezas: termino
+con `Existencia = 15`, `Reservado = 11` y `Disponible = 4`.
+
+**Ejemplo observado en PEP-001 de Reservas:**
+
+```text
+15 / 4 / 11  -- reservar 7 -->  15 / 11 / 4
+Existencia      Reservado       Disponible
+```
+
+Si la cantidad supera `Disponible`, la API devuelve `400 Bad Request` con
+`INSUFFICIENT_AVAILABLE_STOCK`, sin continuar con el incremento. `PEP-009` de
+Reservas pidió 17 con 15 disponibles; la consulta GET posterior confirmó que
+el estado permanecía `15 / 0 / 15`.
+
+### Salida de inventario
+
+**Términos en inglés:** `stock issue`, `reserved stock`, `state transition`.
+
+**Explicación sencilla:** una salida confirma que se consumen unidades que ya
+estaban apartadas. Por eso se descuenta la misma cantidad de la existencia
+física y de las reservas.
+
+**Cómo lo razoné:** La validación de salida no se compara con `Disponible` ni
+solo con `Existencia`; se compara con `Reservado`. Si solo hay 7 unidades
+reservadas, una salida de 8 debe rechazarse. Si la salida es válida, ambos
+valores bajan juntos.
+
+```text
+15 / 7 / 8  -- salida 5 -->  10 / 2 / 8
+Existencia     Reservado      Disponible
+```
+
+También se observó la salida de las 7 unidades reservadas: `7 / 7 / 0` pasó a
+`0 / 0 / 0`. Al pedir una salida de 8 con solo 7 reservadas, la respuesta fue
+`400 Bad Request` con `INSUFFICIENT_RESERVED_STOCK`. El GET posterior confirmó
+que seguían `7 / 7 / 0`. Las requests con cero y con `-5` también devolvieron
+`400`; la consulta posterior confirmó que las cantidades seguían intactas.
+
+### La liberación que falta
+
+**Términos en inglés:** `release`, `reserved quantity`, `physical stock`.
+
+**Mi decisión:** antes de cambiar el estado hay que validar la cantidad para
+evitar errores de consistencia. Para liberar 5 con solo 3 reservadas, se debe
+rechazar la request con `400 Bad Request` y dejar los datos igual. Una
+liberación válida baja `Reservado`, pero deja `Existencia` intacta; así aumenta
+`Disponible` sin fingir que entró o salió mercancía.
+
+```text
+Existencia = 10, Reservado = 3, Disponible = 7
+liberar 2 -> Existencia = 10, Reservado = 1, Disponible = 9
+liberar 5 -> 400; el estado permanece 10 / 3 / 7
+```
+
+El endpoint `POST /inventario/{idProducto}/liberaciones` y sus pruebas quedan
+pendientes. `PEI-008`, la entrada cuando ya existe una reserva, también sigue
+sin resultado registrado.
+
+### Pruebas y evidencia
+
+Las pruebas fueron manuales. Los IDs se agrupan por módulo en
+`docs/requirements/requirements.md`: `PEG-001` a `PEG-004` para consulta de
+Inventario; `PEI-001` a `PEI-007` para entradas; `PEP-001` a `PEP-009` para
+reservas; y `PEP-001` a `PEP-005` para salidas. Se repiten PEG/PEP en otros
+módulos, así que el nombre del módulo acompaña siempre al identificador.
+
+En las notas de `PEP-004` y `PEP-005` de salidas el código quedó transcrito
+como `INVLID_INVENTORY_QUANTITY`, pero el handler actual usa
+`INVALID_INVENTORY_QUANTITY`. El status `400` y la conservación del inventario
+se comprobaron; queda repetir esas requests para confirmar el código exacto.
+
+### Qué aprendí
+
+- Una reserva consume disponibilidad, pero no cambia la existencia física.
+- Una salida reduce existencia y reservas por la misma cantidad; tiene que
+  caber dentro de lo reservado.
+- Una liberación recupera disponibilidad al reducir solo las reservas.
+- Validar antes de modificar y guardar evita dejar cantidades inconsistentes.
+- Un GET posterior permite comprobar con datos observables si una request
+  rechazada dejó intacto el inventario.
+
+### Cierre
+
+Las consultas individuales, reservas y salidas quedaron implementadas y con
+pruebas manuales registradas. La liberación y `PEI-008` continúan pendientes.
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+

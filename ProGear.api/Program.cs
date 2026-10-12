@@ -4,6 +4,7 @@ using ProGear.Api.Models;
 using ProGear.Api.DTOs;
 using ProGear.Api.Middleware;
 using ProGear.Api.Responses;
+using Microsoft.EntityFrameworkCore.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -615,8 +616,82 @@ app.MapPost("/inventario/{idProducto}/salidas", async (int idProducto, CantidadR
     };
 
     return Results.Ok(response);
-
-
-
 });
+
+/*--- Configuración de la ruta POST para registrar las liberaciones de un producto reservado en el inventario---*/
+
+app.MapPost("/inventario/{idProducto}/liberaciones", async (int idProducto, CantidadRequest request, ProGearDbContext context) =>
+{
+    if(idProducto <= 0)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+            Exito = false,
+            Codigo = "INVALID_PRODUCT_ID",
+            Mensaje = "El identificador de producto debe ser mayor a cero."
+        });
+    }
+
+    var producto = await context.Productos.FindAsync(idProducto);
+
+    if(producto == null)
+    {
+        return Results.NotFound(new ErrorResponse
+        {
+           Exito = false,
+           Codigo = "PRODUCT_NOT_FOUND",
+           Mensaje = "No encontramos un producto con el identificador proporcionado." 
+        });
+    }
+    
+    var inventario = await context.Inventarios
+        .SingleOrDefaultAsync(i => i.IdProducto == idProducto);
+
+    if(inventario == null)
+    {
+        return Results.NotFound(new ErrorResponse
+        {
+           Exito = false,
+           Codigo = "INVENTORY_NOT_FOUND",
+           Mensaje = "El producto no cuenta con un registro de inventario." 
+        });
+    }
+
+    if(request.Cantidad <= 0)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+            Exito = false,
+            Codigo = "INVALID_INVENTORY_QUANTITY",
+            Mensaje = "La cantidad debe ser mayor que cero."
+        });
+    }
+
+    if (inventario.Reservado < request.Cantidad)
+    {
+        return Results.BadRequest(new ErrorResponse
+        {
+           Exito = false,
+           Codigo = "INSUFFICIENT_RESERVED_STOCK",
+           Mensaje = "La cantidad que se desea liberar no puede superar las unidades reservadas." 
+        });
+    }
+    inventario.Reservado -= request.Cantidad;
+
+    await context.SaveChangesAsync();
+
+    var response = new InventarioResponse
+    {
+      IdProducto = producto.Id,
+      Nombre = producto.Nombre,
+      Marca = producto.Marca,
+      Sku = producto.Sku,
+      Existencia = inventario.Existencia,
+      Reservado = inventario.Reservado,
+      Disponible = inventario.Existencia - inventario.Reservado
+    };
+
+    return Results.Ok(response);
+});
+
 app.Run();

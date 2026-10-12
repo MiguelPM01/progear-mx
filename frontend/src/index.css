@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+
+
+
+@theme {
+    --color-primary: #1677E8;
+    --color-secondary: #A7ADB7;
+    --color-accent: #E32636;
+    --color-surface: #171A20;
+    --color-background: #0B0D10;
+    --color-foreground: #F4F5F7;
+
+    --font-display: "Rajdhani", sans-serif;
+    --font-sans: "Inter", sans-serif;
+}
+
