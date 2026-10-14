@@ -443,6 +443,22 @@ foreach / API
 | switch -c | crear una rama y cambiar a ella |
 | merge | integrar los commits de una rama en otra |
 | upstream / `-u` | vínculo entre la rama local y su rama remota correspondiente |
+| frontend | Parte de una aplicación con la que interactúa la persona usuaria. |
+| Vite | Herramienta que sirve la aplicación web durante el desarrollo y actualiza los cambios. |
+| React | Biblioteca para construir interfaces con componentes. |
+| TypeScript | JavaScript con tipos que ayudan a detectar y describir formas de datos. |
+| TSX | Formato de archivo que permite escribir marcado de interfaz dentro de TypeScript. |
+| entry point | Punto de entrada: archivo desde el que comienza a ejecutarse una aplicación. |
+| root / root element | Nodo raíz del HTML (`#root`) donde React muestra la interfaz. |
+| mount / mounting | Montar: conectar el árbol de componentes de React con el nodo raíz del HTML. |
+| component | Componente: pieza de interfaz que puede reutilizarse y combinarse con otras. |
+| component composition | Composición: armar una interfaz combinando componentes más pequeños. |
+| HMR (Hot Module Replacement) | Actualización en caliente de módulos durante el desarrollo sin reiniciar el servidor. |
+| Tailwind CSS | Framework de CSS con clases de utilidad para aplicar estilos en los componentes. |
+| utility class | Clase de utilidad que aplica una regla de estilo concreta, como un color o margen. |
+| design token | Token de diseño: nombre reutilizable para un valor visual, como un color o una fuente. |
+| `@theme` | Directiva de Tailwind CSS v4 donde se declaran tokens que pueden generar utilidades. |
+| CSS import order | Orden de importación CSS que determina cómo se procesan las hojas de estilo. |
 
 ---
 
@@ -828,8 +844,6 @@ La conversación de la sesión reporta que el flujo se ejecutó y se observó en
 ## Cierre
 
 Construimos → probamos → reflexionamos → documentamos → cerramos.
-
----
 
 ## Sesión — 1 de octubre de 2026
 
@@ -1404,3 +1418,199 @@ Construimos → probamos → reflexionamos → documentamos → cerramos.
 
 ---
 
+## Sesión — 12 de octubre de 2026
+
+### Tema y objetivo
+
+Iniciar la interfaz web de ProGear MX y entender cómo una página HTML llega a
+mostrar un componente de React. La sesión preparó la base visual y los estilos;
+no construyó todavía el dashboard ni conectó el frontend con la API.
+
+### HTML, punto de entrada y montaje
+
+**Términos en inglés:** `entry point`, `root element`, `mount`, `component`.
+
+**Explicación sencilla:** `index.html` proporciona el nodo `#root`. El script
+de módulos carga `src/main.tsx`; ese archivo importa los estilos y `App.tsx`,
+y usa `createRoot(...).render(...)` para mostrar el componente dentro del nodo
+raíz. `main.tsx` inicia la interfaz; `App.tsx` describe lo que se ve.
+
+**Relación que quedó clara:** El HTML ofrece el nodo raíz, el script carga el
+punto de entrada y `main.tsx` monta el componente de React en ese nodo.
+
+**Ejemplo actual:**
+
+~~~text
+index.html: <div id="root"></div>
+       ↓ carga
+src/main.tsx: createRoot(...).render(<App />)
+       ↓ dibuja
+src/App.tsx: prueba visual de la paleta
+~~~
+
+**Qué aprendí:** `App` es un componente y no tiene que contener toda la
+aplicación. Puedo dividir el diseño en piezas como `Sidebar` y `Header` y
+componerlas cuando llegue ese trabajo.
+
+### Vite y actualización durante el desarrollo
+
+**Términos en inglés:** `development server`, `HMR (Hot Module Replacement)`.
+
+**Explicación sencilla:** Vite sirve la aplicación en el navegador mientras
+trabajo. HMR actualiza los módulos modificados sin reiniciar manualmente el
+servidor; durante la sesión se comprobó que los cambios aparecían en la página.
+
+**Qué aprendí:** Puedo editar un componente y revisar su efecto visual en el
+navegador mientras Vite sigue ejecutándose.
+
+### Tailwind CSS y tokens de diseño
+
+**Términos en inglés:** `utility class`, `design token`, `@theme`, `CSS import
+order`.
+
+**Explicación sencilla:** Las clases de utilidad aplican estilos concretos
+desde el JSX. En Tailwind CSS v4, `@theme` permite declarar valores con nombre
+para colores y fuentes, y generar utilidades reutilizables.
+
+El frontend usa Vite, React, TypeScript y Tailwind CSS v4.3.3. En `index.css`,
+la importación de Google Fonts va antes de `@import "tailwindcss"`. Al
+corregir ese orden, las utilidades de color se vieron aplicadas en el
+navegador. Las fuentes se declararon, pero su carga efectiva todavía no se
+comprobó por separado.
+
+**Cómo lo razoné:** “Primero mantenemos las importaciones externas y después
+las reglas CSS con Tailwind para el diseño visual y todo eso.” Poner las
+importaciones en orden ayuda a entender qué estilos se cargan antes de usar
+las clases de utilidad.
+
+**Tokens registrados en el resumen de la sesión:**
+
+| Token | Valor |
+|---|---|
+| `--color-primary` | `#2589FF` según el resumen de la sesión; el `index.css` revisado en el checkout muestra `#1677E8`, así que falta conciliar el valor vigente. |
+| `--color-secondary` | `#A7ADB7` |
+| `--color-accent` | `#E32636` |
+| `--color-surface` | `#171A20` |
+| `--color-background` | `#0B0D10` |
+| `--color-foreground` | `#F4F5F7` |
+| `--font-display` | Rajdhani, para encabezados y títulos |
+| `--font-sans` | Inter, para el texto general |
+
+### Dirección visual
+
+La marca busca una estética industrial y de carreras, premium y futurista:
+negro/grafito y plata como base, con azul eléctrico y rojo de carreras en
+acentos discretos. El concepto del logotipo coloca una llave de torque digital
+dentro de un engrane y una llave de impacto neumática compacta de pit stop en
+otro. `App.tsx` contiene por ahora una prueba visual de colores, no la pantalla
+final del dashboard.
+
+### Liberación de inventario
+
+El endpoint `POST /inventario/{idProducto}/liberaciones` ya está implementado.
+Valida identificador, producto, inventario y cantidad positiva que no supere
+`Reservado`. Una liberación válida reduce solo `Reservado`; mantiene
+`Existencia` y aumenta `Disponible`. La sesión registra ocho pruebas manuales,
+`PEL-001` a `PEL-008`. Los documentos revisados no contienen el escenario ni
+la respuesta individual de cada ID, por lo que no agrego resultados inventados
+a esta nota.
+
+### Dudas y trabajo siguiente
+
+- Verificar que Rajdhani e Inter efectivamente carguen en el navegador.
+- Definir estilos globales.
+- Construir `Sidebar` y `Header`.
+- Confirmar el valor actual de `--color-primary`: el resumen de sesión dice
+  `#2589FF`, mientras el archivo del checkout revisado contiene `#1677E8`.
+- Dejar la conexión entre frontend y API para un paso posterior.
+- Completar en la matriz los detalles individuales de `PEL-001` a `PEL-008`.
+
+### Cierre
+
+Ya entiendo el recorrido desde el nodo HTML hasta el componente React y vi
+cómo Vite refleja cambios. También comprobé que el orden de importaciones
+afecta los estilos de Tailwind. La base visual está iniciada; las fuentes, los
+componentes del dashboard y la integración siguen pendientes.
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---
+
+## Sesión — 14 de octubre de 2026
+
+### Tema y objetivo
+
+Componer la estructura inicial del dashboard y entender por qué `Header`,
+`Sidebar` y `AppRoutes` necesitan estar en los contenedores correctos. También
+registrar las rutas y distinguir lo que ya está en el código de lo que sigue
+planeado.
+
+### `flex`, `flex-col` y la jerarquía de contenedores
+
+**Términos en inglés:** `flex container`, `flex direction`, `flex item`,
+`flex-1`, `wrapper`.
+
+**Explicación sencilla:** `flex` activa el acomodo flexible y por defecto pone
+los hijos directos en una fila. `flex-col` cambia la dirección para apilar los
+hijos verticalmente. Un `wrapper` es un contenedor que agrupa elementos para
+que compartan esa disposición; `flex-1` permite que un hijo ocupe el espacio
+disponible.
+
+**Cómo lo razoné:** “Para el contenedor `flex-col` es para agruparlo por
+columnas y `flex` es solo para acomodar el contenido interior de ese
+contenedor, que son las rutas y la sidebar.” La idea de separar una columna
+principal para el Header y una fila interior para la navegación quedó clara;
+la precisión importante es que `flex` por sí solo no significa “interior”,
+sino que activa flexbox, mientras que `flex-col` define la dirección vertical.
+
+**El error que encontramos:** `Sidebar` estaba dentro de un `div` con `flex`,
+pero `AppRoutes` quedaba fuera, como otro hijo del `main` con `flex-col`. Por
+eso se apilaban. Los dos elementos debían ser hijos del mismo contenedor de
+fila.
+
+**Estructura que aprendí a reconocer:**
+
+~~~tsx
+<main className="flex flex-col">
+  <Header />
+  <div className="flex gap-6">
+    <Sidebar />
+    <div className="flex-1">
+      <AppRoutes />
+    </div>
+  </div>
+</main>
+~~~
+
+El contenedor principal coloca el Header arriba; el segundo contenedor agrupa
+la Sidebar y el contenido de las rutas en la misma fila.
+
+### Dashboard y navegación
+
+**Términos en inglés:** `dashboard`, `client-side route`, `active link`,
+`navigation sidebar`.
+
+La ruta `/` muestra “Panel Principal” y el mensaje de bienvenida. Las rutas
+`/productos`, `/inventario` y `/precios` ya tienen páginas iniciales con sus
+encabezados. La Sidebar ofrece enlaces a esos tres módulos; una ruta
+desconocida usa la página 404. `NavLink` calcula si cada enlace está activo y
+el código le asigna fondo azul y texto blanco; los demás enlaces usan texto
+secundario y un fondo al pasar el cursor.
+
+**Qué queda como duda o trabajo futuro:** el Header todavía no controla la
+visibilidad de la Sidebar. Se planea un control para alternar u ocultar el
+panel, pero falta definir cómo se activa y en qué tamaños de pantalla cambia
+la navegación. Las páginas actuales son presentación, no flujos conectados a
+la API.
+
+### Cierre
+
+Aprendí que la dirección de flexbox y la relación padre-hijo determinan si los
+elementos quedan uno debajo del otro o uno junto al otro. Para esta interfaz,
+el Header ocupa la parte superior y Sidebar y rutas deben compartir el
+contenedor horizontal. El código actual ya refleja esa composición y las
+rutas; la interacción para ocultar la Sidebar sigue pendiente.
+
+Construimos → probamos → reflexionamos → documentamos → cerramos.
+
+---

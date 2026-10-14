@@ -1,448 +1,342 @@
-# ProGear MX — Requirements
+# Progreso de ProGear MX
 
-## 1. Propósito
+## Alcance actual
 
-ProGear MX es un sistema orientado a la gestión de productos, inventario y ventas para una tienda física de herramientas y productos tecnológicos.
+ProGear MX es un proyecto de aprendizaje y portafolio. El vertical actual
+cubre el catálogo de productos, el historial de precios y las operaciones
+básicas de inventario. El frontend ya tiene un prototipo inicial en trabajo;
+el dashboard final y la conexión con la API todavía no están hechos. Ventas,
+autenticación y nube quedan fuera del alcance inmediato.
 
-El proyecto busca construir software funcional y profesional, manteniendo trazabilidad entre requerimientos, diseño, implementación, pruebas y documentación.
+## Completado o trabajado
+
+- API ASP.NET Core Minimal API conectada a SQL Server mediante Entity Framework
+  Core; `ProGearDbContext` mapea `Producto`, `Inventario` e `HistorialPrecio`.
+- Consulta y alta de productos persistidas con EF Core; SQL Server genera el
+  identificador mediante `IDENTITY`. No hay rutas actuales de actualización o
+  eliminación de productos.
+- Consultas de historial, precio vigente y registro individual de precio; alta
+  y cambio transaccional de precio con `CommitAsync()` y `RollbackAsync()`.
+- Inventario: `GET /inventario`, `GET /inventario/{idProducto}`, entradas,
+  reservas, salidas y liberaciones. `Disponible` se calcula como
+  `Existencia - Reservado`.
+- Reglas implementadas: cantidad de operación positiva; una reserva no supera
+  `Disponible`; una salida no supera `Reservado`; una salida válida reduce
+  `Existencia` y `Reservado` por la misma cantidad; una liberación no supera
+  `Reservado` y reduce únicamente ese valor.
+- Se conservan `ErrorHandlingMiddleware`, `ErrorResponse` y las validaciones
+  de catálogo documentadas desde sesiones anteriores.
+- Frontend inicial con Vite, React, TypeScript y Tailwind CSS v4.3.3. El nodo
+  `#root` carga `main.tsx`, que monta `App.tsx`; la aplicación actual sirve
+  para probar la paleta y las utilidades CSS, no es todavía el dashboard.
+- Dirección de marca industrial/de carreras: base oscura de grafito y plata,
+  acentos discretos azul y rojo, Rajdhani en títulos e Inter en texto general.
+  Las fuentes se declararon; su carga efectiva queda por comprobar.
+- Se verificaron casos de producto mediante Postman, navegador y consultas
+  directas a SQL Server. El detalle disponible de todas las pruebas manuales
+  está agrupado por módulo en
+  [`docs/requirements/requirements.md`](requirements/requirements.md).
+
+## Estado actual
+
+**Fase:** Prototipo inicial de frontend
+
+**Estado:** En progreso — catálogo e `HistorialPrecio` están documentados como
+completados. `Inventario` ya permite consultar, ingresar, reservar, dar salida
+y liberar unidades reservadas. Se inició el prototipo web; su dashboard e
+integración con la API siguen pendientes.
+
+Las pruebas documentadas son manuales. La sesión del 2026-10-12 registra
+`PEL-001` a `PEL-008` para la operación de liberaciones. Los identificadores
+`PEG`, `PEP` y `PEL` se agrupan por módulo y operación; no deben leerse como
+secuencias globales.
+
+## Sesión documentada — 2026-10-12
+
+- [x] Iniciar el frontend en `frontend/` con Vite, React, TypeScript y
+  Tailwind CSS v4.3.3.
+- [x] Conectar el nodo `#root` del HTML con el punto de entrada `main.tsx`,
+  que monta el componente `App`.
+- [x] Comprobar que HMR actualiza la página durante el desarrollo.
+- [x] Corregir el orden de importaciones CSS: fuentes de Google antes de
+  `@import "tailwindcss"`; verificar en el navegador que las utilidades de
+  color se aplican.
+- [x] Definir tokens `@theme` y dirección visual inicial para ProGear MX.
+- [x] Implementar `POST /inventario/{idProducto}/liberaciones` con cantidad
+  positiva, límite `Cantidad <= Reservado` y actualización exclusiva de
+  `Reservado`.
+- [x] Registrar la ejecución manual de `PEL-001` a `PEL-008`.
+- [ ] Incorporar los escenarios y resultados individuales de `PEL-001` a
+  `PEL-008` a la matriz cuando se recupere ese detalle.
+
+### Aprendizaje y estado visual
+
+`index.html` contiene el nodo que React necesita para insertar la interfaz.
+`main.tsx` es el punto de entrada y entrega la composición al componente
+`App.tsx`; dividir la interfaz en componentes permite construir piezas
+reutilizables. HMR refleja los cambios en la página sin detener el servidor.
+
+Tailwind CSS v4 permite declarar colores y fuentes como tokens de `@theme`.
+Las reglas CSS externas deben importarse en el orden correcto para que Tailwind
+las procese; las utilidades de color ya se observaron en el navegador. Aunque
+Rajdhani e Inter están declaradas, la carga efectiva de ambas fuentes sigue
+sin verificación separada.
+
+El resumen de la sesión indica `--color-primary: #2589FF`, pero el archivo
+`frontend/src/index.css` revisado en el checkout contiene `#1677E8`. Queda por
+decidir cuál valor representa el token vigente antes de construir más UI.
+
+### Siguiente bloque
+
+- Verificar que Rajdhani e Inter carguen en el navegador.
+- Definir estilos globales.
+- Construir `Sidebar` y `Header` como primeros componentes del dashboard.
+- Conectar el frontend con la API en una sesión posterior.
+- Completar el detalle de la matriz manual `PEL-001` a `PEL-008`.
+
+### Cierre
+
+La base React y la prueba visual de Tailwind ya se muestran en el navegador;
+el diseño del dashboard y la conexión con el backend aún son trabajo futuro.
+Las liberaciones de inventario están implementadas y la sesión registra ocho
+pruebas manuales, aunque falta recuperar el detalle individual de cada una.
+
+## Sesión documentada — 2026-10-09
+
+- [x] Implementar y probar `GET /inventario/{idProducto}`.
+- [x] Implementar `POST /inventario/{idProducto}/reservas`: mantener
+  `Existencia`, aumentar `Reservado` y rechazar cantidades mayores que
+  `Disponible`.
+- [x] Implementar `POST /inventario/{idProducto}/salidas`: reducir
+  `Existencia` y `Reservado` solo si la cantidad no supera `Reservado`.
+- [x] Registrar pruebas de consulta `PEG-001` a `PEG-004` del módulo
+  `Inventario`.
+- [x] Registrar pruebas de reservas `PEP-001` a `PEP-009` y de salidas
+  `PEP-001` a `PEP-005`, separadas por operación.
+- [x] Confirmar con una consulta GET que las salidas rechazadas por cantidad
+  insuficiente, cero o negativa no cambiaron las existencias ni las reservas.
+- [ ] Implementar y probar `POST /inventario/{idProducto}/liberaciones`.
+- [ ] Resolver `PEI-008`, que sigue pendiente como prueba de entrada con una
+  reserva existente.
+
+### Aprendizaje del flujo
+
+Una reserva reduce `Disponible` sin tocar la existencia física. Una salida
+confirmada reduce tanto la existencia como la reserva. Una liberación pendiente
+debe reducir únicamente `Reservado`, después de validar una cantidad positiva
+que no supere lo reservado; así se recupera disponibilidad sin alterar el
+stock físico. Los detalles y límites de cada prueba están en la matriz de
+requerimientos.
+
+### Cierre de la sesión
+
+Las consultas, reservas y salidas de inventario quedan implementadas y con
+pruebas manuales registradas. La liberación continúa pendiente; su regla está
+documentada como diseño acordado, no como comportamiento ya disponible.
+
+## Sesión documentada — 2026-10-08
+
+- [x] Documentar el modelo y las reglas de `Inventario`.
+- [x] Mantener la semántica `Producto 1 : 0..1 Inventario`.
+- [x] Crear `InventarioResponse` como DTO de salida.
+- [x] Crear `CantidadRequest` como DTO reutilizable de entrada.
+- [x] Implementar `GET /inventario` mediante `Join`.
+- [x] Implementar `POST /inventario/{idProducto}/entradas`.
+- [x] Validar identificador, producto inexistente y cantidad no positiva con
+  `ErrorResponse`.
+- [x] Registrar las pruebas manuales `PEI-001` a `PEI-007`.
+- [ ] Ejecutar `PEI-008`; quedó pendiente al cierre del 2026-10-08 y sigue sin
+  resultado registrado al 2026-10-09.
+
+### Cierre de la sesión
+
+La primera entrega de `Inventario` queda documentada. El siguiente trabajo es
+implementar y probar reservas, salidas, liberaciones y la consulta individual,
+sin atribuir esos comportamientos a esta sesión.
+
+## Sesión documentada — 2026-10-06
+
+- [x] Completar `GET /productos/{id}/precios/historial`.
+- [x] Completar `GET /productos/{id}/precio`.
+- [x] Completar `GET /productos/{id}/precios/{precioId}`.
+- [x] Completar `POST /productos/{id}/precios` para primer precio y cambio.
+- [x] Validar identificadores, precio menor o igual que cero y precio duplicado.
+- [x] Confirmar cierre del precio anterior y creación del nuevo precio vigente.
+- [x] Confirmar transacción con `Commit`.
+- [x] Ejecutar prueba controlada de `Rollback` y comprobar que `$2,100` permaneció vigente.
+- [x] Retirar la condición artificial y confirmar una prueba normal posterior.
+- [x] Documentar pruebas `PEG-001` a `PEG-009` y `PEP-010` a `PEP-015`.
+
+### Cierre de HistorialPrecio
+
+`HistorialPrecio` queda cerrado conforme a las reglas definidas antes de su
+desarrollo. El siguiente bloque de trabajo es `Inventario`.
+
+### Pruebas registradas
+
+La matriz completa y los resultados están en `docs/requirements/requirements.md`.
+Se conserva la convención `PEG = Prueba Endpoint GET` y `PEP = Prueba Endpoint POST`.
+
+## Sesión documentada — 2026-10-02
+
+- [x] Completar `GET /productos/{id}/precios/historial`.
+- [x] Completar `GET /productos/{id}/precio`.
+- [x] Validar identificadores inválidos con `400`.
+- [x] Validar productos inexistentes con `404`.
+- [x] Confirmar `200` con `[]` para un historial vacío.
+- [x] Confirmar `200` con `null` cuando el producto existe pero no tiene precio
+  vigente.
+- [x] Confirmar `200` con los datos del historial o del precio vigente cuando
+  existen.
+- [x] Revisar el mapeo EF Core de `HistorialPrecio` y la traducción conceptual
+  de las consultas LINQ a SQL.
+- [x] Resolver mediante debugging basado en evidencia que el `1` visible en
+  Postman era el número de línea del editor y no el contenido de la respuesta.
+
+### Estado técnico al cierre
+
+Los endpoints de consulta de historial y precio vigente están documentados con
+el contrato `400/404/200` observado. En la sesión posterior del 2026-10-06 se
+completó el cambio de precio y se cerró `HistorialPrecio`.
+
+## Sesión documentada — 2026-10-01
+
+- [x] Conectar ASP.NET Core a SQL Server mediante EF Core.
+- [x] Configurar `ProGearDbContext` y `OnModelCreating` para las entidades
+  actuales.
+- [x] Consultar productos desde SQL Server con `ToListAsync()` y
+  `FindAsync(id)`.
+- [x] Crear productos con `Add` y `SaveChangesAsync()`.
+- [x] Confirmar que SQL Server genera los identificadores mediante `IDENTITY`.
+- [x] Eliminar la lista de productos en memoria y `siguienteId`.
+- [x] Probar creación válida, SKU duplicado, nombre vacío, SKU vacío y request
+  incompleto.
+- [x] Comparar resultados entre Postman, navegador y consultas directas a SQL
+  Server.
+
+### Aprendizajes confirmados
+
+- `async` permite que una operación se ejecute de forma asíncrona y `await`
+  espera su resultado.
+- `try/catch` permite manejar excepciones.
+- `Add` agrega la entidad al seguimiento de EF Core y `SaveChangesAsync()` hace
+  persistentes los cambios.
+- EF Core traduce expresiones de C# a consultas SQL.
+- `DbContext` funciona como contexto y mapa entre los modelos de la aplicación
+  y la base de datos.
+
+## Sesión documentada — 2026-09-29
+
+- [x] Expresar el precio vigente como `FechaFin IS NULL`.
+- [x] Relacionar la regla con `PRIMARY KEY`, `FOREIGN KEY`, `NOT NULL`, `UNIQUE`, `CHECK` y `DEFAULT`.
+- [x] Entender el índice único filtrado para impedir dos precios vigentes del mismo producto.
+- [x] Probar el cambio de precio como `UPDATE` + `INSERT` dentro de una transacción.
+- [x] Reutilizar `@MomentoCambio` para cerrar el precio anterior y abrir el nuevo con el mismo instante.
+- [x] Confirmar el resultado observado: precio anterior cerrado y nuevo precio con `FechaFin = NULL`.
+
+### Estado técnico real
+
+La API ya tiene persistencia básica del catálogo integrada con SQL Server y EF
+Core. `Program.cs` usa `ProGearDbContext` para consultar y crear productos; la
+lista local y `siguienteId` ya no forman parte del flujo. `Inventario` y
+`HistorialPrecio` tienen modelo y mapeo, pero todavía no tienen operaciones
+específicas implementadas en la API.
 
 ---
 
-## 2. MVP
+## Completado
 
-El MVP contempla inicialmente:
+### Configuración inicial
 
-- Productos
-- Inventario
-- Clientes
-- Promociones
-- Ventas
-- Pagos
+- [x] Crear solución .NET
+- [x] Crear proyecto ASP.NET Core
+- [x] Configurar solución
+- [x] Ejecutar API
+- [x] Crear repositorio Git
+- [x] Conectar repositorio con GitHub
 
-El desarrollo será incremental y cada funcionalidad deberá pasar por:
+### API inicial
 
-1. Requerimiento
-2. Diseño suficiente
-3. Implementación
-4. Pruebas
-5. Revisión
-6. Documentación
-7. Commit
+- [x] Crear modelo Producto
+- [x] Crear DTO para creación de Producto
+- [x] Crear GET `/productos`
+- [x] Crear GET `/productos/{id}`
+- [x] Crear POST `/productos`
+- [x] Validar nombre
+- [x] Validar SKU
+- [x] Validar SKU duplicado
+- [x] Validar precio
+- [x] Implementar respuestas de error
+- [x] Implementar middleware global de errores
+- [x] Probar errores 400, 404 y 500
+- [x] Probar creación exitosa de producto
+- [x] Persistir productos en SQL Server mediante EF Core
+- [x] Generar identificadores con SQL Server `IDENTITY`
 
----
+### Git
 
-### Pruebas manuales iniciales — API y middleware
+- [x] Practicar `git status`
+- [x] Practicar `git diff`
+- [x] Practicar `git add`
+- [x] Practicar `git diff --staged`
+- [x] Practicar `git commit`
+- [x] Practicar `git push`
+- [x] Entender Working Directory
+- [x] Entender Staging
+- [x] Entender Local Repository
+- [x] Entender Remote Repository
 
-Las notas de progreso desde el arranque registran pruebas de respuestas
-`400`, `404` y `500` para el manejo global de errores, además de una request
-de creación de producto con datos faltantes. Los endpoints, payloads y
-resultados detallados de esos primeros ejercicios no están conservados con
-identificadores de caso; se documenta la cobertura general sin atribuirles
-comportamientos más específicos.
+### Modelado
 
-| Evidencia conservada | Resultado registrado |
-|---|---|
-| Respuestas de error `400`, `404` y `500` | Se probaron como parte del trabajo inicial de `ErrorHandlingMiddleware`; no se conserva el detalle por endpoint. |
-| Alta de producto con datos faltantes | Request probada desde Postman; los datos exactos y su response no están preservados en el registro actual. |
-
----
-
-## 3. Producto
-
-El sistema debe permitir:
-
-- Registrar productos.
-- Consultar productos.
-- Identificar productos mediante SKU.
-- Mantener el nombre del producto.
-- Mantener la marca del producto.
-- Mantener el historial completo de precios.
-
-### Reglas
-
-- El SKU debe ser único.
-- Un producto puede existir aunque todavía no tenga inventario registrado.
-- Un producto puede existir aunque todavía no tenga un precio registrado.
-- El precio no se almacenará directamente en Producto.
-- El precio vigente se obtiene del historial de precios.
-
-### Estado de implementación — 2026-10-09
-
-El vertical actual de productos ya está conectado a SQL Server mediante Entity
-Framework Core. La API permite consultar todos los productos, consultar uno por
-identificador y crear productos. La creación valida nombre, SKU y SKU duplicado;
-el identificador lo genera SQL Server. `HistorialPrecio` cuenta con consultas
-GET, consulta por registro y alta/cambio de precio mediante POST. `Inventario`
-cuenta con consulta general y específica, entradas, reservas y salidas. La
-liberación de reservas sigue pendiente.
-
-### Pruebas manuales de Producto
-
-La evidencia conservada en las notas de progreso incluye creación válida,
-identificadores generados `6` y `7`, SKU duplicado, nombre vacío, SKU vacío y
-una request incompleta. También se compararon resultados entre Postman,
-navegador y consultas directas a SQL Server. Los resultados detallados de la
-request incompleta no están preservados, así que no se asigna aquí un código
-HTTP ni un código de error a ese caso.
-
-| Caso documentado | Resultado respaldado por código y notas |
-|---|---|
-| Alta válida por `POST /productos` | `201 Created`; SQL Server asignó los identificadores confirmados `6` y `7`. |
-| `Nombre` vacío o solo espacios | `400 Bad Request`, `INVALID_PRODUCT_NAME`. |
-| `Sku` vacío o solo espacios | `400 Bad Request`, `INVALID_PRODUCT_SKU`. |
-| SKU duplicado | `409 Conflict`, `DUPLICATED_SKU`. |
-| Request incompleta | Se probó; el detalle exacto de la respuesta no quedó registrado. |
-| Verificación cruzada | Los datos observados en Postman, navegador y consultas SQL Server coincidieron para los casos revisados. |
-
-La API actual no recibe un precio dentro de `POST /productos`; el precio se
-registra por separado en `HistorialPrecio`. El handler actual de
-`GET /productos/{id}` contiene el literal `PRODUCT_NOT_fOUND` (con `f`
-minúscula) para el caso no encontrado; ese contrato debe alinearse con
-`PRODUCT_NOT_FOUND` y verificarse en una sesión posterior.
+- [x] Identificar entidades
+- [x] Separar entidades de atributos
+- [x] Definir Producto
+- [x] Definir Inventario
+- [x] Definir HistorialPrecio
+- [x] Definir relaciones
+- [x] Definir cardinalidades
+- [x] Definir reglas de inventario
+- [x] Definir historial de precios
+- [x] Crear DBML
+- [x] Crear ERD en DBDiagram
+- [x] Guardar DBML en el repositorio
+- [x] Guardar ERD en PNG
 
 ---
 
-## 4. Historial de precios
+## Próximo bloque
 
-Cada cambio de precio debe conservarse para mantener trazabilidad.
+### Frontend
 
-Un producto puede tener:
+- [ ] Verificar que Rajdhani e Inter carguen correctamente.
+- [ ] Definir estilos globales.
+- [ ] Construir los componentes `Sidebar` y `Header`.
+- [ ] Planear y conectar el frontend con la API.
+- [ ] Conciliar `--color-primary` entre el valor consignado en la sesión
+  (`#2589FF`) y el valor presente en el checkout (`#1677E8`).
 
-- Ningún registro de precio.
-- Un registro de precio.
-- Múltiples registros históricos.
+### Inventario
 
-### Operaciones HTTP implementadas
+- [x] Implementar y probar manualmente `POST /inventario/{idProducto}/liberaciones`.
+- [ ] Incorporar el detalle individual de los casos `PEL-001` a `PEL-008`.
+- [ ] Resolver `PEI-008` y registrar su resultado.
+- [ ] Repetir `PEP-004` y `PEP-005` de salidas para confirmar el código de error exacto.
 
-#### `GET /productos/{id}/precios/historial`
+### Alineación técnica
 
-Devuelve la colección completa de registros de precio del producto.
-
-- `400 Bad Request` si `id` no es mayor que cero, con código
-  `INVALID_PRODUCT_ID`.
-- `404 Not Found` si no existe el producto, con código
-  `PRODUCT_NOT_FOUND`.
-- `200 OK` con una colección de `HistorialPrecio`; si no hay registros, la
-  colección es `[]`.
-
-#### `GET /productos/{id}/precio`
-
-Devuelve el único registro cuyo `FechaFin` es `NULL`, es decir, el precio
-vigente.
-
-- `400 Bad Request` si `id` no es mayor que cero, con código
-  `INVALID_PRODUCT_ID`.
-- `404 Not Found` si no existe el producto, con código
-  `PRODUCT_NOT_FOUND`.
-- `200 OK` con el registro vigente o `null` si el producto existe pero no tiene
-  un precio vigente.
-
-Estas consultas no cambian precios ni crean registros; solo leen el estado
-actual del historial.
-
-#### `GET /productos/{id}/precios/{precioId}`
-
-Devuelve un registro del historial que pertenece al producto y al identificador
-de precio solicitado.
-
-- `400 Bad Request` si `id` no es mayor que cero, con código
-  `INVALID_PRODUCT_ID`.
-- `400 Bad Request` si `precioId` no es mayor que cero, con código
-  `INVALID_PRICE_ID`.
-- `404 Not Found` si no existe el producto, con código `PRODUCT_NOT_FOUND`.
-- `404 Not Found` si el registro no existe o pertenece a otro producto, con
-  código `PRICE_HISTORY_NOT_FOUND`.
-- `200 OK` cuando el registro pertenece al producto solicitado.
-
-#### `POST /productos/{id}/precios`
-
-Registra el primer precio o cambia el precio vigente conservando el historial.
-
-- `400 Bad Request` si `id` no es mayor que cero, si el precio es menor o igual
-  que cero (`INVALID_PRODUCT_PRICE`) o si coincide con el precio vigente
-  (`DUPLICATED_PRICE`).
-- `404 Not Found` si no existe el producto, con código `PRODUCT_NOT_FOUND`.
-- `201 Created` cuando se crea el registro y se confirma la operación.
-- Si existe un precio vigente, se cierra con `FechaFin`, se crea el nuevo con
-  `FechaInicio` en el mismo instante y `FechaFin = NULL`.
-- El cierre y la creación se ejecutan dentro de una transacción; `Commit` se
-  realiza cuando el flujo termina correctamente y `Rollback` se ejecuta si
-  ocurre una excepción.
-
-### Reglas
-
-- Cada registro pertenece a un producto.
-- `FechaInicio` indica cuándo comienza la vigencia.
-- `FechaFin` indica cuándo termina.
-- `FechaFin = NULL` representa el precio actualmente vigente.
-- No debe existir más de un precio vigente simultáneamente para un producto.
-
-### Reglas implementadas o validadas en la sesión del 2026-10-06
-
-Estas reglas quedaron expresadas, implementadas y probadas manualmente desde la
-API.
-
-- Un cambio de precio debe cerrar el registro vigente y crear un nuevo registro histórico.
-- El registro anterior recibe `FechaFin = @MomentoCambio`.
-- El nuevo registro recibe `FechaInicio = @MomentoCambio` y `FechaFin = NULL`.
-- El cierre y la creación forman una sola transacción; si falla la operación, sus cambios deben poder revertirse con `ROLLBACK`.
-- Un índice único filtrado debe impedir más de un registro con `FechaFin IS NULL` para el mismo `IdProducto`.
-- El historial puede conservar varios registros con el mismo precio; la regla es la unicidad del precio vigente, no la unicidad histórica del valor.
-
-### Registro de pruebas manuales
-
-Convención: `PEG` significa **Prueba Endpoint GET** y `PEP` significa **Prueba
-Endpoint POST**.
-
-| ID | Endpoint | Resultado observado |
-|---|---|---|
-| PEG-001 | `GET /productos/{id}/precios/historial` | `200 OK` con historial existente. |
-| PEG-002 | `GET /productos/{id}/precios/historial` | `200 OK` con `[]` para un producto sin historial. |
-| PEG-003 | `GET /productos/{id}/precios/historial` | `404 Not Found` para producto inexistente. |
-| PEG-004 | `GET /productos/{id}/precios/historial` | `400 Bad Request` para identificador inválido. |
-| PEG-005 | `GET /productos/{id}/precio` | `200 OK` con precio vigente. |
-| PEG-006 | `GET /productos/{id}/precio` | `200 OK` con `null` sin precio vigente. |
-| PEG-007 | `GET /productos/{id}/precio` | `404 Not Found` para producto inexistente. |
-| PEG-008 | `GET /productos/{id}/precio` | `400 Bad Request` para identificador inválido. |
-| PEG-009 | `GET /productos/{id}/precios/{precioId}` | `200 OK` con registro perteneciente al producto. |
-| PEP-010 | `POST /productos/{id}/precios` | `201 Created` al registrar el primer precio. |
-| PEP-011 | `POST /productos/{id}/precios` | `201 Created` al cambiar el precio y conservar el anterior. |
-| PEP-012 | `POST /productos/{id}/precios` | `400 Bad Request` al repetir el precio vigente. |
-| PEP-013 | `POST /productos/{id}/precios` | `400 Bad Request` para precio menor o igual que cero. |
-| PEP-014 | `POST /productos/{id}/precios` | `404 Not Found` para producto inexistente. |
-| PEP-015 | `POST /productos/{id}/precios` | `400 Bad Request` para identificador inválido. |
-
-### Prueba controlada de rollback
-
-Partiendo de `$2,100` vigente, se intentó registrar `$2,500` y se provocó una
-excepción temporal después de `SaveChangesAsync()` y antes de `CommitAsync()`.
-La API respondió `500 Internal Server Error` mediante el middleware. Después de
-la operación, `$2,100` continuó vigente y `$2,500` no quedó confirmado. La
-condición artificial se eliminó y una prueba normal posterior devolvió
-`201 Created`.
+- [ ] Alinear el código de error del producto inexistente en
+  `GET /productos/{id}` con `PRODUCT_NOT_FOUND` y verificar la respuesta.
+- [ ] Reconciliar la restricción SQL que permite precio cero con la validación
+  actual de la API, que rechaza precios menores o iguales a cero.
+- [ ] Reconciliar el script SQL versionado con el mapeo EF Core y confirmar el
+  estado de despliegue/migraciones.
 
 ---
 
-## 5. Inventario
+## Principio de trabajo
 
-El inventario representa las existencias físicas y las unidades apartadas
-temporalmente para una operación.
+Construir antes que perfeccionar.
 
-### Datos y reglas
+Cada bloque seguirá:
 
-- Un producto puede existir sin registro de inventario y puede tener como
-  máximo una fila de inventario.
-- `Existencia >= 0` y `Reservado >= 0`.
-- `Reservado <= Existencia`.
-- `Disponible = Existencia - Reservado`; `Disponible` se calcula, no se
-  almacena.
-- Un inventario ausente significa que no se registró stock; una fila con
-  `Existencia = 0` significa que sí existe un registro sin unidades.
-
-### Operaciones HTTP implementadas — 2026-10-09
-
-En los endpoints de inventario, un `idProducto` no positivo produce
-`400 Bad Request` con `INVALID_PRODUCT_ID`, y un producto inexistente produce
-`404 Not Found` con `PRODUCT_NOT_FOUND`. Las operaciones que necesitan una fila
-de inventario existente responden `404 Not Found` con `INVENTORY_NOT_FOUND` si
-no la encuentran; la primera entrada es la excepción porque crea la fila.
-
-#### `GET /inventario`
-
-Devuelve los resúmenes de inventario que tienen producto relacionado mediante
-un `Join`. Un producto sin fila de inventario no aparece. La respuesta incluye
-`IdProducto`, `Nombre`, `Marca`, `Sku`, `Existencia`, `Reservado` y
-`Disponible`.
-
-#### `GET /inventario/{idProducto}`
-
-Devuelve el resumen de un producto y su inventario. Responde `400 Bad Request`
-con `INVALID_PRODUCT_ID` para un identificador no positivo; `404 Not Found`
-con `PRODUCT_NOT_FOUND` si el producto no existe; y `404 Not Found` con
-`INVENTORY_NOT_FOUND` si existe el producto pero no tiene fila de inventario.
-En caso válido, responde `200 OK` con `InventarioResponse`.
-
-#### `POST /inventario/{idProducto}/entradas`
-
-Requiere `Cantidad > 0`; responde `400 Bad Request` con
-`INVALID_INVENTORY_QUANTITY` si no se cumple. Si el producto aún no tiene
-inventario, crea la fila con `Existencia = Cantidad` y `Reservado = 0`. Si ya
-existe, suma `Cantidad` a `Existencia` y conserva `Reservado`. Devuelve
-`201 Created` con el estado resultante.
-
-#### `POST /inventario/{idProducto}/reservas`
-
-Requiere producto e inventario existentes, `Cantidad > 0` y
-`Cantidad <= Disponible`. Si la cantidad supera la disponibilidad, responde
-`400 Bad Request` con `INSUFFICIENT_AVAILABLE_STOCK`; si no es positiva,
-responde `400 Bad Request` con `INVALID_INVENTORY_QUANTITY`. Una reserva válida
-mantiene `Existencia`, incrementa `Reservado` y recalcula `Disponible`. La
-respuesta observada es `200 OK` con `InventarioResponse`.
-
-#### `POST /inventario/{idProducto}/salidas`
-
-Requiere producto e inventario existentes, `Cantidad > 0` y
-`Cantidad <= Reservado`. Si la cantidad supera lo reservado, responde
-`400 Bad Request` con `INSUFFICIENT_RESERVED_STOCK`; si no es positiva,
-responde `400 Bad Request` con `INVALID_INVENTORY_QUANTITY`. Una salida válida
-reduce `Existencia` y `Reservado` por la misma cantidad, y devuelve `200 OK`
-con `InventarioResponse`.
-
-Los handlers validan antes de cambiar entidades y guardar. Las pruebas
-registradas confirman que los casos rechazados de salidas no alteraron el
-stock. Para otras respuestas de error, el estado se afirma solo cuando se
-consultó después con un GET.
-
-#### Liberación de reserva — diseño acordado, pendiente
-
-`POST /inventario/{idProducto}/liberaciones` aún no está implementado. Al
-implementarlo, debe exigir `Cantidad > 0` y `Cantidad <= Reservado`. Si se
-solicitan 5 unidades y solo hay 3 reservadas, debe devolver `400 Bad Request`
-con un `ErrorResponse` coherente, por ejemplo
-`INSUFFICIENT_RESERVED_STOCK`, sin modificar el inventario. Una liberación
-válida solo reduce `Reservado`; `Existencia` permanece igual y
-`Disponible` aumenta por la cantidad liberada. El comportamiento y su código
-HTTP de éxito aún no están implementados ni probados.
-
-### Registro de pruebas manuales — Inventario
-
-Los prefijos se reutilizan en módulos diferentes. Cada subsección fija el
-módulo de los identificadores, por lo que `PEG-001` o `PEP-001` no son
-identificadores globales únicos. Las pruebas aquí registradas fueron manuales.
-
-#### Consultas — PEG, módulo Inventario (`GET /inventario/{idProducto}`)
-
-| ID | Caso | Resultado observado |
-|---|---|---|
-| PEG-001 | Producto `1` con inventario | `200 OK` con nombre, marca, SKU, existencia, reservado y disponible. |
-| PEG-002 | Producto inexistente | `404 Not Found`; la nota de prueba contiene una transcripción inicial con el código mal escrito. El handler actual declara `PRODUCT_NOT_FOUND`. |
-| PEG-003 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
-| PEG-004 | Producto `5` existe, sin fila de inventario | `404 Not Found`, `INVENTORY_NOT_FOUND`. |
-
-#### Entradas — PEI, módulo Inventario
-
-Convención: `PEI` significa **Prueba Endpoint Inventario**.
-
-| ID | Caso | Resultado observado |
-|---|---|---|
-| PEI-001 | Primera entrada de 10 unidades | `201 Created`; `Existencia = 10`, `Reservado = 0`, `Disponible = 10`. |
-| PEI-002 | Entrada adicional de 5 unidades | `201 Created`; `Existencia = 15` sin crear otro registro. |
-| PEI-003 | Cantidad `0` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
-| PEI-004 | Cantidad `-5` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
-| PEI-005 | `idProducto = -1` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
-| PEI-006 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
-| PEI-007 | Producto inexistente | `404 Not Found`, `PRODUCT_NOT_FOUND`. |
-| PEI-008 | Entrada con una reserva existente | Pendiente; no se conserva un resultado de prueba. |
-
-#### Reservas — PEP, módulo Reservas de Inventario
-
-| ID | Caso | Resultado observado |
-|---|---|---|
-| PEP-001 | Producto `1`: reservar 4 y luego 7, con 15 de existencia | Ambas requests dieron `200 OK`; el estado pasó de `15/4/11` a `15/11/4` (`Existencia/Reservado/Disponible`). |
-| PEP-002 | Producto `4`: reservar las 12 unidades existentes | `200 OK`; `Disponible = 0`. |
-| PEP-003 | Producto `3`: reservar más de las 15 unidades disponibles | `400 Bad Request`, `INSUFFICIENT_AVAILABLE_STOCK`. |
-| PEP-004 | Cantidad `0` en producto `3` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
-| PEP-005 | Cantidad `-7` en producto `3` | `400 Bad Request`, `INVALID_INVENTORY_QUANTITY`. |
-| PEP-006 | Producto `8` existe, sin fila de inventario | `404 Not Found`, `INVENTORY_NOT_FOUND`. |
-| PEP-007 | Producto inexistente `9` | `404 Not Found`, `PRODUCT_NOT_FOUND`. |
-| PEP-008 | `idProducto = 0` | `400 Bad Request`, `INVALID_PRODUCT_ID`. |
-| PEP-009 | Producto `3`: solicitar reserva de 17 con existencia 15 | `400 Bad Request`, `INSUFFICIENT_AVAILABLE_STOCK`; el GET posterior confirmó `15/0/15`, sin cambios. |
-
-#### Salidas — PEP, módulo Salidas de Inventario
-
-| ID | Caso | Resultado observado |
-|---|---|---|
-| PEP-001 | Producto `3`: con `15/7/8`, dar salida a 5 | `200 OK`; quedó `10/2/8` (`Existencia/Reservado/Disponible`). |
-| PEP-002 | Producto `8`: con `7/7/0`, dar salida a 7 | `200 OK`; quedó `0/0/0`. |
-| PEP-003 | Producto `8`: con `7/7/0`, intentar salida de 8 | `400 Bad Request`, `INSUFFICIENT_RESERVED_STOCK`; el GET posterior confirmó `7/7/0`, sin cambios. |
-| PEP-004 | Producto `8`: con `7/7/0`, cantidad `0` | `400 Bad Request`; el GET posterior confirmó que el inventario no cambió. |
-| PEP-005 | Producto `8`: con `7/7/0`, cantidad `-5` | `400 Bad Request`; el GET posterior confirmó que el inventario no cambió. |
-
-En las notas originales de `PEP-004` y `PEP-005`, el código se transcribió como
-`INVLID_INVENTORY_QUANTITY`. El handler actual usa
-`INVALID_INVENTORY_QUANTITY`; el status y la conservación del inventario sí
-quedaron registrados, pero el código exacto de esas dos responses requiere
-reconciliarse con una nueva request.
-
-#### Historial de precios — PEG/PEP, módulo HistorialPrecio
-
-`PEG-001` a `PEG-009`, `PEP-010` a `PEP-015` y la prueba controlada de rollback
-se mantienen en la sección 4 de este documento. Sus identificadores pertenecen
-a ese módulo y son independientes de las matrices de Inventario.
-
----
-
-## 6. Ventas
-
-El flujo conceptual de una venta es:
-
-1. El cliente solicita un producto.
-2. El sistema consulta el producto.
-3. El sistema consulta su disponibilidad.
-4. El producto puede reservarse.
-5. Se muestra el resumen de la venta.
-6. El usuario revisa y confirma.
-7. Se procesa el pago.
-8. Si el pago es exitoso, la venta se concreta.
-9. El inventario se actualiza.
-
-### Reglas
-
-- No se debe vender una cantidad superior a la disponible.
-- No debe existir inventario negativo.
-- El precio utilizado en la venta debe conservarse.
-- La venta se considera concretada después de un pago exitoso.
-
----
-
-## 7. Reservas
-
-Una venta puede reservar inventario antes de concretarse.
-
-Las reglas siguientes describen el comportamiento requerido del dominio. La
-API actualmente implementa crear reservas y confirmar salidas; liberar una
-reserva todavía no tiene endpoint.
-
-### Reglas
-
-- Una reserva disminuye la disponibilidad.
-- Una cancelación libera la reserva.
-- Una venta concretada descuenta físicamente la existencia y libera la reserva.
-- Las reservas pueden liberarse por expiración.
-- Si un pago falla, se permite cambiar el método y reintentar hasta dos veces.
-- Después del segundo fallo, la venta se cancela y la reserva se libera.
-
----
-
-## 8. Métodos de pago iniciales
-
-- Efectivo
-- Tarjeta
-- Contactless
-- CoDi
-
-Para efectivo:
-
-`Cambio = MontoRecibido - Total`
-
-Para métodos no monetarios:
-
-`MontoAcreditado = Total`
-
----
-
-## 9. Fuera del MVP
-
-Inicialmente quedan fuera:
-
-- Recursos humanos
-- Nómina
-- Finanzas avanzadas
-- Reportes avanzados
-- Power BI
-- IA
-- IoT
-- Gestión avanzada de proveedores
-- Módulo completo de compras
-
-Estos elementos podrán evaluarse en futuras versiones.
+`Requerimiento → Diseño → Implementación → Prueba → Revisión → Documentación → Commit`

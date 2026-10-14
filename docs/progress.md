@@ -4,8 +4,10 @@
 
 ProGear MX es un proyecto de aprendizaje y portafolio. El vertical actual
 cubre el catálogo de productos, el historial de precios y las operaciones
-básicas de inventario. Ventas, autenticación, frontend y nube quedan fuera del
-alcance inmediato.
+básicas de inventario. El frontend ya tiene la estructura inicial del dashboard,
+el Header, la Sidebar y las rutas con páginas de presentación; los flujos de
+gestión y la conexión con la API siguen pendientes. Ventas, autenticación y
+nube quedan fuera del alcance inmediato.
 
 ## Completado o trabajado
 
@@ -17,29 +19,132 @@ alcance inmediato.
 - Consultas de historial, precio vigente y registro individual de precio; alta
   y cambio transaccional de precio con `CommitAsync()` y `RollbackAsync()`.
 - Inventario: `GET /inventario`, `GET /inventario/{idProducto}`, entradas,
-  reservas y salidas. `Disponible` se calcula como `Existencia - Reservado`.
+  reservas, salidas y liberaciones. `Disponible` se calcula como
+  `Existencia - Reservado`.
 - Reglas implementadas: cantidad de operación positiva; una reserva no supera
   `Disponible`; una salida no supera `Reservado`; una salida válida reduce
-  `Existencia` y `Reservado` por la misma cantidad.
+  `Existencia` y `Reservado` por la misma cantidad; una liberación no supera
+  `Reservado` y reduce únicamente ese valor.
 - Se conservan `ErrorHandlingMiddleware`, `ErrorResponse` y las validaciones
   de catálogo documentadas desde sesiones anteriores.
+- Frontend con Vite, React, TypeScript y Tailwind CSS v4.3.3. `App.tsx` coloca
+  `Header` encima de una fila que agrupa `Sidebar` y `AppRoutes`; las rutas
+  `/`, `/productos`, `/inventario` y `/precios` muestran páginas de
+  presentación. La Sidebar tiene estilos de enlace activo mediante `NavLink`.
+  Aún no hay gestión de datos ni conexión con la API.
+- Dirección de marca industrial/de carreras: base oscura de grafito y plata,
+  acentos discretos azul y rojo, Rajdhani en títulos e Inter en texto general.
+  Las fuentes se declararon; su carga efectiva queda por comprobar.
 - Se verificaron casos de producto mediante Postman, navegador y consultas
-  directas a SQL Server. El detalle disponible de todas las pruebas manuales
-  está agrupado por módulo en
-  [`docs/requirements/requirements.md`](requirements/requirements.md).
+  directas a SQL Server. En el checkout revisado,
+  `docs/requirements/requirements.md` es idéntico a este archivo; no hay una
+  matriz de pruebas independiente consolidada.
 
 ## Estado actual
 
-**Fase:** Operaciones de inventario
+**Fase:** Estructura y navegación inicial del frontend
 
 **Estado:** En progreso — catálogo e `HistorialPrecio` están documentados como
-completados. `Inventario` ya permite consultar, ingresar, reservar y dar salida
-a existencias. El endpoint de liberación sigue pendiente de implementar y
-probar.
+completados. `Inventario` ya permite consultar, ingresar, reservar, dar salida
+y liberar unidades reservadas. El frontend tiene una estructura de dashboard,
+Header, Sidebar, navegación y páginas iniciales; su contenido funcional y la
+integración con la API siguen pendientes. El control de ocultar la Sidebar está
+planeado, pero no implementado.
 
-Las pruebas documentadas hasta el 2026-10-09 son manuales. Los identificadores
-`PEG` y `PEP` se reutilizan entre módulos y por ello cada matriz indica su
-módulo; no deben leerse como una sola secuencia global.
+Las pruebas documentadas son manuales. La sesión del 2026-10-12 registra
+`PEL-001` a `PEL-008` para la operación de liberaciones. Los identificadores
+`PEG`, `PEP` y `PEL` se agrupan por módulo y operación; no deben leerse como
+secuencias globales.
+
+## Sesión documentada — 2026-10-14
+
+- [x] Confirmar en el código que el `Header` queda arriba y que `Sidebar` y
+  `AppRoutes` comparten la misma fila horizontal.
+- [x] Registrar las rutas `/`, `/productos`, `/inventario`, `/precios` y la
+  ruta comodín para la página no encontrada.
+- [x] Confirmar en el código las clases condicionales de `NavLink` para los
+  estados activo e inactivo.
+- [x] Documentar la estructura, el tema visual actual y el estado del
+  frontend en [docs/frontend/design.md](frontend/design.md) y
+  [docs/requirements/frontend-requirements.md](requirements/frontend-requirements.md).
+- [ ] Definir e implementar el comportamiento de alternar u ocultar la
+  Sidebar; el disparador y las condiciones todavía no están especificados.
+- [ ] Completar el contenido funcional de las páginas y conectar el frontend
+  con la API.
+- [ ] Comprobar en navegador la presentación del enlace activo, la carga de
+  Rajdhani e Inter y el comportamiento en distintos anchos.
+- [ ] Resolver la diferencia entre `#2589FF` en el resumen anterior y
+  `#1677E8` en `frontend/src/index.css`.
+
+### Aprendizaje y composición de la interfaz
+
+`flex` crea un contenedor flexible y, sin cambiar la dirección, organiza sus
+hijos en una fila. `flex-col` cambia la dirección para apilarlos verticalmente.
+En `App`, el contenedor principal usa esa dirección vertical para poner el
+Header encima; un segundo contenedor `flex` mantiene `Sidebar` y `AppRoutes`
+lado a lado, y `flex-1` deja que el área de rutas ocupe el espacio disponible.
+
+La sesión mostró por qué importa la jerarquía: cuando `AppRoutes` queda fuera
+de la misma fila que `Sidebar`, ambos se convierten en bloques separados del
+contenedor principal y se apilan. Al ponerlos juntos bajo un mismo padre, la
+Sidebar y el contenido pasan a compartir la fila.
+
+### Límite de verificación
+
+El estado de rutas, componentes y clases se verificó leyendo el código actual.
+La captura de la sesión muestra el panel principal y la composición visual.
+No se ejecutaron pruebas ni una nueva comprobación de navegación en navegador
+durante esta actualización documental.
+
+## Sesión documentada — 2026-10-12
+
+- [x] Iniciar el frontend en `frontend/` con Vite, React, TypeScript y
+  Tailwind CSS v4.3.3.
+- [x] Conectar el nodo `#root` del HTML con el punto de entrada `main.tsx`,
+  que monta el componente `App`.
+- [x] Comprobar que HMR actualiza la página durante el desarrollo.
+- [x] Corregir el orden de importaciones CSS: fuentes de Google antes de
+  `@import "tailwindcss"`; verificar en el navegador que las utilidades de
+  color se aplican.
+- [x] Definir tokens `@theme` y dirección visual inicial para ProGear MX.
+- [x] Implementar `POST /inventario/{idProducto}/liberaciones` con cantidad
+  positiva, límite `Cantidad <= Reservado` y actualización exclusiva de
+  `Reservado`.
+- [x] Registrar la ejecución manual de `PEL-001` a `PEL-008`.
+- [ ] Incorporar los escenarios y resultados individuales de `PEL-001` a
+  `PEL-008` a la matriz cuando se recupere ese detalle.
+
+### Aprendizaje y estado visual
+
+`index.html` contiene el nodo que React necesita para insertar la interfaz.
+`main.tsx` es el punto de entrada y entrega la composición al componente
+`App.tsx`; dividir la interfaz en componentes permite construir piezas
+reutilizables. HMR refleja los cambios en la página sin detener el servidor.
+
+Tailwind CSS v4 permite declarar colores y fuentes como tokens de `@theme`.
+Las reglas CSS externas deben importarse en el orden correcto para que Tailwind
+las procese; las utilidades de color ya se observaron en el navegador. Aunque
+Rajdhani e Inter están declaradas, la carga efectiva de ambas fuentes sigue
+sin verificación separada.
+
+El resumen de la sesión indica `--color-primary: #2589FF`, pero el archivo
+`frontend/src/index.css` revisado en el checkout contiene `#1677E8`. Queda por
+decidir cuál valor representa el token vigente antes de construir más UI.
+
+### Siguiente bloque
+
+- Verificar que Rajdhani e Inter carguen en el navegador.
+- Definir estilos globales.
+- Construir `Sidebar` y `Header` como primeros componentes del dashboard.
+- Conectar el frontend con la API en una sesión posterior.
+- Completar el detalle de la matriz manual `PEL-001` a `PEL-008`.
+
+### Cierre
+
+La base React y la prueba visual de Tailwind ya se muestran en el navegador;
+el diseño del dashboard y la conexión con el backend aún son trabajo futuro.
+Las liberaciones de inventario están implementadas y la sesión registra ocho
+pruebas manuales, aunque falta recuperar el detalle individual de cada una.
 
 ## Sesión documentada — 2026-10-09
 
@@ -246,9 +351,27 @@ específicas implementadas en la API.
 
 ## Próximo bloque
 
+### Frontend
+
+- [ ] Definir e implementar el comportamiento de alternar u ocultar la
+  Sidebar desde el Header.
+- [ ] Completar los flujos de las páginas de productos, inventario y precios.
+- [ ] Conectar el frontend con la API.
+- [ ] Verificar visualmente los enlaces activos, la carga de las fuentes y el
+  comportamiento del layout en distintos anchos.
+- [ ] Conciliar `--color-primary` entre el valor consignado en la sesión
+  (`#2589FF`) y el valor presente en el checkout (`#1677E8`).
+
+### Documentación
+
+- [ ] Recuperar o consolidar la matriz de pruebas manuales en un documento
+  independiente; el archivo `docs/requirements/requirements.md` actual es una
+  copia de `docs/progress.md`.
+
 ### Inventario
 
-- [ ] Implementar y probar `POST /inventario/{idProducto}/liberaciones`.
+- [x] Implementar y probar manualmente `POST /inventario/{idProducto}/liberaciones`.
+- [ ] Incorporar el detalle individual de los casos `PEL-001` a `PEL-008`.
 - [ ] Resolver `PEI-008` y registrar su resultado.
 - [ ] Repetir `PEP-004` y `PEP-005` de salidas para confirmar el código de error exacto.
 

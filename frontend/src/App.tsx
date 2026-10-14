@@ -1,22 +1,21 @@
-import './App.css';
+import Header from "./components/layout/Header";
+import AppRoutes from "./routes/AppRoutes";
+import Sidebar from "./components/layout/Sidebar";
 
 function App() {
-  return(
+  return (
+    <main className="min-h screen p-8 flex flex-col gap-6">
+      <Header/>
 
-    <main className="min-h-screen bg-background p-8 font-sans text-foreground">
-      <h1 className="font-display text-4xl font-bold text-primary">
-        ProGear MX
-      </h1>
+      <div className="flex gap-6">
+        <Sidebar/>
 
-      <p className="mt-3 text-secondary">
-        Precisión, tecnología y rendimiento.
-      </p>
-
-      <button className="mt-6 rounded-lg bg-accent px-5 py-3 font-display text-lg font-semibold text-white">
-        Acción importante
-      </button>
+        <div className="flex-1">
+          <AppRoutes/>
+        </div>
+      </div>
     </main>
-  )
+  );
 }
 
 export default App

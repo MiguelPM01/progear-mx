@@ -119,9 +119,34 @@
 | InventarioResponse | DTO de salida que combina datos de Producto, Inventario y Disponible calculado. |
 | CantidadRequest | DTO de entrada reutilizable que recibe la cantidad de una operación de inventario. |
 | Reservation / reserva | Aparta temporalmente parte de `Disponible` para una operación. No reduce la existencia física; aumenta `Reservado`. |
-| Release / liberación de reserva | Devuelve unidades reservadas a la disponibilidad. Reduce `Reservado` y conserva `Existencia`; el endpoint de ProGear MX está pendiente. |
+| Release / liberación de reserva | Devuelve unidades reservadas a la disponibilidad. Reduce `Reservado` y conserva `Existencia`; ProGear MX implementa `POST /inventario/{idProducto}/liberaciones`. |
 | Stock issue / salida de inventario | Confirma la salida de unidades reservadas. Reduce `Existencia` y `Reservado` por la misma cantidad. |
 | `INSUFFICIENT_AVAILABLE_STOCK` | Error de inventario cuando la cantidad solicitada para una reserva supera `Disponible`. |
-| `INSUFFICIENT_RESERVED_STOCK` | Error de inventario cuando una salida o futura liberación solicita más unidades que las reservadas. |
+| `INSUFFICIENT_RESERVED_STOCK` | Error de inventario cuando una salida o liberación solicita más unidades que las reservadas. |
 | Invariant / invariante | Condición que debe mantenerse siempre en los datos; aquí `Existencia >= 0`, `Reservado >= 0` y `Reservado <= Existencia`. |
 | No mutation on rejected request | Regla por la que una solicitud inválida devuelve `ErrorResponse` antes de guardar cambios; las pruebas de salidas confirmaron que las cantidades no cambiaron en los rechazos revisados. |
+| Vite | Herramienta de desarrollo web que inicia el servidor local y actualiza la página durante el trabajo. |
+| React | Biblioteca para construir interfaces web mediante componentes. |
+| TypeScript | Lenguaje basado en JavaScript que añade tipos y se compila para ejecutarse en el navegador. |
+| TSX | Sintaxis que permite escribir elementos parecidos a HTML dentro de TypeScript, como en `App.tsx`. |
+| Component | Componente: pieza reutilizable de interfaz que puede combinarse con otras; `App` es el componente raíz de la prueba actual. |
+| Component composition | Composición de componentes: construir una interfaz combinando componentes más pequeños. |
+| HMR (Hot Module Replacement) | Actualización en caliente: Vite reemplaza partes modificadas mientras el servidor sigue activo, sin reiniciar toda la página de desarrollo. |
+| Tailwind CSS | Framework de CSS que ofrece clases de utilidad para aplicar estilos directamente en el marcado de los componentes. |
+| Utility class | Clase de utilidad que aplica una regla de estilo concreta, por ejemplo `bg-background` o `text-primary`. |
+| `@theme` | Directiva de Tailwind CSS v4 para declarar tokens de diseño que pueden convertirse en utilidades. |
+| Design token / token de diseño | Valor con nombre, como un color o una fuente, reutilizable para mantener consistencia visual. |
+| CSS `@import` order | Orden de importación CSS: las fuentes externas se declaran antes de Tailwind CSS para que la hoja procese ambas reglas en el orden esperado. |
+| Root mounting / montaje en el nodo raíz | Conectar el componente de React con un elemento del HTML, como `#root`, para que la interfaz se muestre en la página. |
+| PEL | Prefijo de los identificadores de prueba manual usados para la operación de liberaciones de inventario. |
+| Flex container / contenedor flex | Elemento con `display: flex` cuyos hijos directos se acomodan según una dirección; por defecto, en fila. |
+| `flex-col` | Utilidad de Tailwind que acomoda verticalmente los hijos de un contenedor flex. |
+| `flex-1` | Utilidad de Tailwind que permite que un elemento flexible crezca para ocupar el espacio disponible. |
+| `gap` | Espacio entre los elementos de un contenedor, por ejemplo `gap-6`. |
+| `AppRoutes` | Componente que asocia rutas del frontend con las páginas que React muestra. |
+| Client-side route / ruta del frontend | Dirección que la aplicación React asocia con una vista, como `/productos`. |
+| Dashboard / panel principal | Página de entrada de la aplicación; en ProGear MX corresponde a `/` y muestra el encabezado de bienvenida actual. |
+| `Header` | Componente superior del layout; actualmente muestra la marca y reserva un espacio para un control aún sin comportamiento. |
+| `Sidebar` | Panel lateral con navegación a Productos, Inventario y Precios. |
+| `NavLink` | Componente de React Router que permite aplicar clases según si la ruta del enlace está activa. |
+| Active link / enlace activo | Enlace de navegación cuya ruta coincide con la vista actual; `Sidebar` aplica `bg-primary` y texto blanco en ese estado. |
