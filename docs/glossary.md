@@ -128,6 +128,7 @@
 | Vite | Herramienta de desarrollo web que inicia el servidor local y actualiza la página durante el trabajo. |
 | React | Biblioteca para construir interfaces web mediante componentes. |
 | TypeScript | Lenguaje basado en JavaScript que añade tipos y se compila para ejecutarse en el navegador. |
+| JSX | Sintaxis que permite describir la estructura de una interfaz utilizando una forma similar a HTML dentro de JavaScript o TypeScript. |
 | TSX | Sintaxis que permite escribir elementos parecidos a HTML dentro de TypeScript, como en `App.tsx`. |
 | Component | Componente: pieza reutilizable de interfaz que puede combinarse con otras; `App` es el componente raíz de la prueba actual. |
 | Component composition | Composición de componentes: construir una interfaz combinando componentes más pequeños. |
@@ -150,3 +151,32 @@
 | `Sidebar` | Panel lateral con navegación a Productos, Inventario y Precios. |
 | `NavLink` | Componente de React Router que permite aplicar clases según si la ruta del enlace está activa. |
 | Active link / enlace activo | Enlace de navegación cuya ruta coincide con la vista actual; `Sidebar` aplica `bg-primary` y texto blanco en ese estado. |
+|`w` | Prefijo de Tailwind CSS que permite establecer el ancho (width) de un elemento, ejemplo `<nav className="w-70"` esto quiere decir que el elemento de navegación tendrá un ancho de 17.5rem con la escala predeterminada de Tailwind CSS v4.|
+| `type` | Palabra clave de TypeScript que permite definir un alias de tipo, como la estructura de las propiedades de un componente. |
+| Props | Propiedades que un componente React recibe de su componente padre. |
+| `KpiCardProps` | Tipo que define las propiedades que recibe el componente `KpiCard`: `id`, `titulo`, `valor` e `icono` . |
+| `string` | Tipo que representa cadenas de texto. |
+| `number` | Tipo de TypeScript que representa valores numéricos. No equivale a un tipo decimal monetario especializado. |
+| `LucideIcon` | Tipo utilizado para representar un componente de icono de Lucide React. |
+| `import type` | Sintaxis de TypeScript para importar un tipo sin tratarlo como una importación de valor en tiempo de ejecución. |
+| `font-sans` | Clase de Tailwind asociada a la familia tipográfica sans-serif configurada en el tema. En ProGear MX utilizamos Inter. |
+| `font-display` | Clase personalizada para la tipografía destacada de ProGear MX. utiliza Rajdhani. |
+| `text-primary` | Clase de color de texto asociada al color principal de marca: `#2589FF`. |
+| `text-seconday` | Clase de color de texto asociada al color secundario `#A7ADB7`. |
+| `bg-surface` | Calse de fondo asociada a la superficie de tarjetas y paneles; `#171A20`. |
+| `padding`| Espacio interior entre el contenido de un elemento y sus bordes. |
+| ´p-5´ | Clase de Tailwind que aplica padding de 5 unidades de su escala de espaciado, equivalente a 20 píxeles en la escala predeterminada. |
+| `gap-3` | Clase de Tailwind que establece separación entre elementos de un contenedor que utiliza un sistema de layout compatible, como Flexbox o Grid. |
+| Flexbox | Sistema de CSS para organizar elementos en una dimensión, por fila o columna. |
+| `flex-col` | Clase de Tailwind que organiza los elementos de un contenedor Flexbox verticalmente. |
+| CSS Grid | Sistema de CSS para organizar elementos en filas y columnas. |
+| `grid-cols-1` | Clase de Tailwind que establece una columna en CSS Grid. |
+| `md:` | Prefijo de Tailwind que aplica una clase a partir del punto de quiebre `md`. |
+| Responsive design | Enfoque de diseño que adapta la interfaz a distintos tamaños de pantalla. |
+| `NavLink` | Componente de React Router que crea enlaces de navegación y permite conocer si la ruta está activa. |
+| `onClick` | Propiedad de un elemento React que recibe una función para ejecutar una acción cuando se activa el evento de clic. |
+| KPI | Indicador clave de rendimiento o de estado. En el dashboard representa información resumida de productos e inventario. |
+| Dashboard | Pantalla que reúne indicadores y otra información relevante para facilitar la consulta del estado del sistema. |
+| `width` | Ancho de un elemento. |
+| `w-*` | Familia de clases de Tailwind que controla el ancho de un elemento; por ejemplo, `w-64`. La `w` corresponde a `width` (ancho). |
+

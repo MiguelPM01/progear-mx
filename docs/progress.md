@@ -56,6 +56,71 @@ Las pruebas documentadas son manuales. La sesión del 2026-10-12 registra
 `PEG`, `PEP` y `PEL` se agrupan por módulo y operación; no deben leerse como
 secuencias globales.
 
+---
+
+## Sesión — 15 de octubre de 2026
+
+### Avance: frontend — Dashboard y sistema visual
+
+**Estado:** en desarrollo.
+
+Se avanzó en la estructura visual del frontend de ProGear MX mediante
+React, TypeScript, Vite y Tailwind CSS.
+
+### Implementado
+
+- Configuración inicial del frontend con React y TypeScript.
+- Integración de Tailwind CSS mediante `@tailwindcss/vite`.
+- Configuración de la identidad visual en `src/index.css`.
+- Incorporación de `lucide-react` para utilizar iconos.
+- Configuración de navegación con React Router.
+- Creación de páginas para Dashboard, Productos, Inventario, Precios y
+  página no encontrada.
+- Implementación de la Sidebar con navegación mediante `NavLink`.
+- Incorporación del enlace Inicio al principio de la navegación.
+- Creación del componente Header con botón Menú y propiedad
+  `onToggleSidebar`.
+- Creación del componente reutilizable `KpiCard`.
+- Construcción del dashboard con cuatro tarjetas KPI.
+- Aplicación de estilos tipográficos y colores de marca.
+- Configuración de la cuadrícula responsiva de las KPI.
+
+### KPI representadas
+
+| Identificador | Indicador | Valor ilustrativo |
+|---|---|---:|
+| KPI / 01 | Productos registrados | 120 |
+| KPI / 02 | Existencias físicas | 120 |
+| KPI / 03 | Reservado | 20 |
+| KPI / 04 | Disponible | 100 |
+
+Los valores anteriores son datos de ejemplo. No representan información
+consultada desde SQL Server ni desde la API.
+
+### Aprendizajes
+
+- Definición y uso de propiedades tipadas mediante TypeScript.
+- Reutilización de componentes React.
+- Paso de componentes de iconos como propiedades.
+- Uso de `LucideIcon` como tipo importado mediante `import type`.
+- Organización visual mediante clases de Tailwind CSS.
+- Uso de variables de color y tipografías personalizadas.
+- Diseño de una cuadrícula responsiva mediante puntos de quiebre.
+- Separación de responsabilidades entre la página y sus componentes.
+
+### Pendiente
+
+- Completar el comportamiento de visibilidad de la Sidebar y verificar
+  su accesibilidad.
+- Conectar el frontend con la API REST.
+- Sustituir los valores ilustrativos de las KPI por datos reales.
+- Implementar las interfaces funcionales de Productos, Inventario y Precios.
+- Incorporar estados de carga, errores y respuestas vacías al consumir la API.
+- Continuar las pruebas del frontend en diferentes tamaños de pantalla.
+
+---
+
+
 ## Sesión documentada — 2026-10-14
 
 - [x] Confirmar en el código que el `Header` queda arriba y que `Sidebar` y

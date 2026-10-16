@@ -8,7 +8,7 @@ function obtenerClasesEnlace(isActive: boolean) {
 
 function Sidebar() {
     return(
-        <nav className="w-64 p-4 rounded-xl bg-surface">
+        <nav className="w-70 p-4 rounded-xl bg-surface font-sans text-secondary">
             <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-secondary">
                     Logo
@@ -27,12 +27,22 @@ function Sidebar() {
             <ul className="flex flex-col gap-2">
                 <li>
                     <NavLink
+                    to="/"
+                    className={({ isActive }) => obtenerClasesEnlace(isActive)}
+                    >
+                            Inicio
+                    </NavLink>
+                </li>
+
+                <li>
+                    <NavLink
                     to="/productos"
                     className={({ isActive }) => obtenerClasesEnlace(isActive)}
                         >
                             Productos
                     </NavLink>
-                    </li>
+                </li>
+
                 <li>
                     <NavLink
                     to="/inventario"
@@ -41,6 +51,7 @@ function Sidebar() {
                             Inventario
                     </NavLink>
                 </li>
+                
                 <li>
                     <NavLink
                     to="/precios"

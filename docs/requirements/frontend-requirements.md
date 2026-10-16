@@ -43,3 +43,58 @@ conecta con la API. La documentación de su estructura está en
   verificar.
 - El valor de `--color-primary` en el código es `#1677E8`; una nota anterior
   registró `#2589FF`. La diferencia sigue pendiente de decisión.
+
+---
+
+## Frontend — Estado de implementación
+
+### Objetivo
+
+Proporcionar una interfaz web para consultar y gestionar las funcionalidades
+de ProGear MX mediante navegación entre páginas y componentes reutilizables.
+
+### Requisitos de interfaz
+
+| ID | Requisito | Estado |
+|---|---|---|
+| FE-001 | La aplicación debe presentar un dashboard como página inicial. | Implementado visualmente |
+| FE-002 | La aplicación debe permitir navegar entre Inicio, Productos, Inventario y Precios. | Implementado |
+| FE-003 | La navegación debe indicar visualmente la ruta activa. | Implementado mediante `NavLink` |
+| FE-004 | La aplicación debe mostrar una página para rutas no reconocidas. | Implementado |
+| FE-005 | El dashboard debe mostrar cuatro tarjetas KPI reutilizables. | Implementado visualmente |
+| FE-006 | Cada KPI debe recibir un identificador, título, valor e icono mediante props tipadas. | Implementado |
+| FE-007 | La interfaz debe utilizar los colores y las tipografías definidos para ProGear MX. | Implementado parcialmente en los componentes construidos |
+| FE-008 | La cuadrícula KPI debe adaptarse a pantallas pequeñas y medianas o grandes. | Clases responsivas configuradas; falta comprobar en distintos tamaños |
+| FE-009 | El botón Menú debe permitir controlar la visibilidad de la Sidebar. | Pendiente de verificar el comportamiento completo |
+| FE-010 | El dashboard debe mostrar indicadores obtenidos desde la API. | Pendiente |
+| FE-011 | La interfaz debe mostrar estados de carga y errores al consumir la API. | Pendiente |
+| FE-012 | Las páginas de Productos, Inventario y Precios deben permitir ejecutar sus operaciones correspondientes. | Pendiente |
+
+### Datos ilustrativos del dashboard
+
+Los siguientes valores se utilizan únicamente para construir y revisar la
+presentación visual:
+
+| KPI | Valor ilustrativo |
+|---|---:|
+| Productos registrados | 120 |
+| Existencias físicas | 120 |
+| Reservado | 20 |
+| Disponible | 100 |
+
+Estos valores no son una consulta de la base de datos ni una respuesta de la
+API. La integración deberá definir el origen de cada indicador y verificar
+que los cálculos respeten las reglas de negocio.
+
+### Criterios de aceptación visual
+
+- Las cuatro tarjetas deben utilizar el mismo componente reutilizable.
+- Cada tarjeta debe mostrar su título, valor, icono e identificador.
+- La tipografía y los colores deben seguir los tokens definidos para la marca.
+- La cuadrícula debe utilizar una columna por defecto y dos a partir del
+  punto de quiebre `md`.
+- La navegación debe permitir identificar la página activa.
+- Los valores ilustrativos deben sustituirse por datos reales antes de
+  considerar terminada la integración del dashboard.
+
+---

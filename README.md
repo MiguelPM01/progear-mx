@@ -6,100 +6,108 @@ ProGear MX es un proyecto de aprendizaje práctico y portafolio. Su primer
 vertical es Product Management: modelar productos, consultarlos y validar su
 creación mientras se construye una base sólida de ingeniería de software.
 
-## Estado actual — 2026-10-14
+## Estado actual — 2026-10-15
 
-La API ASP.NET Core Minimal API usa Entity Framework Core y SQL Server. El
-catálogo permite consultar productos y registrar productos nuevos; el precio
-se conserva en `HistorialPrecio`. Las rutas actualmente implementadas son:
+### Backend
 
-- `GET /productos` y `GET /productos/{id}`;
-- `POST /productos`;
-- `GET /productos/{id}/precios/historial`;
-- `GET /productos/{id}/precio`;
-- `GET /productos/{id}/precios/{precioId}`;
-- `POST /productos/{id}/precios`, con cierre del precio anterior y alta del
-  nuevo dentro de una transacción;
-- `GET /inventario` y `GET /inventario/{idProducto}`;
-- `POST /inventario/{idProducto}/entradas`;
-- `POST /inventario/{idProducto}/reservas`;
-- `POST /inventario/{idProducto}/salidas`;
-- `POST /inventario/{idProducto}/liberaciones`.
+La API REST está construida con ASP.NET Core Minimal API, Entity Framework
+Core y SQL Server.
 
-`Inventario` conserva `Existencia` y `Reservado`; `Disponible` se calcula como
-`Existencia - Reservado`. Las entradas requieren una cantidad positiva, las
-reservas no pueden superar la disponibilidad y las salidas no pueden superar
-lo reservado. Las liberaciones requieren una cantidad positiva que no supere
-`Reservado`; una liberación válida reduce solo `Reservado` y conserva la
-existencia física. Las solicitudes rechazadas responden con `ErrorResponse`
-antes de guardar cambios.
+El backend incluye operaciones para consultar y registrar productos,
+consultar el historial de precios, registrar cambios de precio y gestionar
+operaciones de inventario implementadas.
 
-SQL Server genera los identificadores de producto mediante `IDENTITY`. La API
-no incluye actualmente rutas de actualización o eliminación de productos. Las
-pruebas registradas son manuales. En este checkout,
-`docs/requirements/requirements.md` coincide con `docs/progress.md`, por lo que
-no hay una matriz de pruebas independiente consolidada.
-Ventas y autenticación siguen fuera del vertical actual.
+Las reglas de inventario distinguen entre existencia física, unidades
+reservadas y disponibilidad:
 
-El frontend de `frontend/` usa Vite, React, TypeScript y Tailwind CSS v4.3.3.
-Ya tiene una estructura inicial de dashboard: `Header` en la parte superior y,
-debajo, `Sidebar` junto al contenido de `AppRoutes`. Las rutas definidas son
-`/` (panel principal), `/productos`, `/inventario` y `/precios`, además de una
-vista para rutas desconocidas. Las páginas de módulos muestran encabezados de
-presentación; todavía no gestionan datos ni se conectan con la API.
+`Disponible = Existencia - Reservado`
 
-`Sidebar` usa `NavLink` con estilos distintos para el enlace activo. La hoja
-`index.css` define el tema Tailwind con fondo oscuro de grafito, superficies,
-texto claro y acentos azul y rojo; el token actual `--color-primary` es
-`#1677E8`. El resumen de una sesión anterior registró `#2589FF`, por lo que
-ese valor sigue pendiente de conciliar. Rajdhani e Inter están declaradas, pero
-su carga efectiva no se ha comprobado. El control previsto para alternar u
-ocultar la Sidebar todavía no tiene comportamiento implementado.
+La documentación de requerimientos contiene la matriz de pruebas y el estado
+de las operaciones implementadas.
+
+### Frontend
+
+Se inició la interfaz web mediante React, TypeScript, Vite y Tailwind CSS.
+
+El frontend cuenta con:
+
+- Navegación mediante React Router.
+- Sidebar con enlaces a Inicio, Productos, Inventario y Precios.
+- Header con botón Menú.
+- Página inicial con un dashboard.
+- Componente reutilizable `KpiCard`.
+- Cuatro tarjetas KPI para productos registrados, existencias físicas,
+  unidades reservadas y disponibilidad.
+- Iconos de `lucide-react`.
+- Identidad visual basada en colores y tipografías personalizados.
+- Cuadrícula KPI con clases responsivas de Tailwind.
+
+Los valores mostrados en el dashboard son ilustrativos. El frontend todavía
+no está conectado a la API para obtener estos indicadores.
+
+Las páginas de Productos, Inventario y Precios tienen navegación configurada,
+pero aún requieren la implementación de sus interfaces funcionales.
 
 ## Tecnologías
 
-- .NET 10 / ASP.NET Core Minimal API
+### Backend
+
+- .NET 10
 - C#
+- ASP.NET Core Minimal API
+- Entity Framework Core
+- SQL Server
+
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Lucide React
+
+### Ingeniería y documentación
+
 - Git y GitHub
-- SQL Server y Entity Framework Core
-- Vite, React, TypeScript y Tailwind CSS v4.3.3 (prototipo frontend)
+- Postman
+- Markdown
+- Documentación de requerimientos, diseño, pruebas y aprendizaje
 
-## Estructura
+## Identidad visual
 
-```text
-ProGear.api/       API y lógica actual del catálogo e inventario
-frontend/          Prototipo web con Vite, React, TypeScript y Tailwind CSS
-docs/              Requerimientos, diseño técnico, pruebas y notas de aprendizaje
-docs/frontend/     Diseño y decisiones actuales de la interfaz
-ProGear.slnx       Solution de .NET
-```
+La interfaz utiliza una paleta oscura con azul como color principal y gris
+plateado como color secundario.
 
-## Ejecutar localmente
+Las tipografías principales son Rajdhani para títulos y valores destacados,
+e Inter para textos generales y navegación.
 
-```powershell
-dotnet run --project ProGear.api
-```
-
-Con la aplicación en ejecución, la API queda disponible en la URL que indique
-la terminal. Los ejemplos de requests pueden consultarse en
-`ProGear.api/ProGear.api.http`.
-
-Para iniciar el prototipo web en otra terminal:
-
-```powershell
-Set-Location frontend
-npm run dev
-```
-
-El navegador mostrará el cascarón inicial del dashboard y las páginas de
-presentación de cada ruta. Los flujos de gestión y la conexión con la API aún
-no están implementados.
+Los tokens de color y las fuentes se configuran en `frontend/src/index.css`.
 
 ## Enfoque del proyecto
 
 El proyecto prioriza construir un vertical pequeño y comprensible, registrar
 el razonamiento y agregar complejidad solo cuando una necesidad concreta la
-justifique. El aprendizaje y las decisiones se documentan en
-[`docs/notes/learning-notebook.md`](docs/notes/learning-notebook.md), junto con el
-[`glosario`](docs/glossary.md), el [`progreso`](docs/progress.md), el
-[diseño del frontend](docs/frontend/design.md) y sus
-[requerimientos](docs/requirements/frontend-requirements.md).
+justifique.
+
+La metodología de trabajo es incremental:
+
+1. Entender el problema.
+2. Definir requisitos y reglas de negocio.
+3. Diseñar una solución suficiente.
+4. Implementar.
+5. Probar.
+6. Revisar y depurar.
+7. Documentar.
+8. Registrar los cambios mediante Git.
+
+El objetivo es desarrollar criterio técnico y autonomía, no limitarse a
+copiar código o completar tutoriales.
+
+## Documentación
+
+- `docs/requirements/requirements.md`: requerimientos y matriz de pruebas.
+- `docs/notes/learning-notebook.md`: registro de sesiones y aprendizajes.
+- `docs/glossary.md`: glosario acumulativo.
+- `docs/progress.md`: avance general.
+- Documentación de diseño: decisiones de arquitectura y diseño visual.

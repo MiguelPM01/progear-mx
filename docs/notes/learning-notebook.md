@@ -1614,3 +1614,153 @@ rutas; la interacción para ocultar la Sidebar sigue pendiente.
 Construimos → probamos → reflexionamos → documentamos → cerramos.
 
 ---
+
+## Sesión — 15 de octubre de 2026
+
+### Tema y objetivo
+
+Construir la base visual del frontend de ProGear MX mediante React,
+TypeScript y Tailwind CSS, aplicando una identidad visual consistente y
+organizando el dashboard con componentes reutilizables.
+
+El objetivo fue comprender la estructura de los componentes, el uso de
+props tipadas y la separación de responsabilidades entre la página principal
+y las tarjetas KPI.
+
+### Lo que construimos
+
+- Configuración del frontend mediante Vite, React y TypeScript.
+- Integración de Tailwind CSS con `@tailwindcss/vite`.
+- Definición de la paleta de colores y las tipografías del proyecto.
+- Navegación entre Dashboard, Productos, Inventario, Precios y página 404.
+- Sidebar con enlaces activos mediante `NavLink`.
+- Header con botón Menú y propiedad `onToggleSidebar`.
+- Componente reutilizable `KpiCard`.
+- Dashboard con cuatro indicadores:
+  - Productos registrados.
+  - Existencias físicas.
+  - Reservado.
+  - Disponible.
+- Integración de iconos mediante `lucide-react`.
+- Ajustes de espaciado, tamaño tipográfico, colores y disposición de tarjetas.
+- Adaptación de la cuadrícula KPI mediante clases responsivas de Tailwind.
+
+### Modelo del componente KPI
+
+El componente `KpiCard` recibe las siguientes propiedades:
+
+- `id: string`
+- `titulo: string`
+- `valor: number`
+- `icono: LucideIcon`
+
+`KpiCardProps` define qué información necesita el componente. La función
+`KpiCard` recibe esas propiedades y devuelve JSX para representar la tarjeta.
+
+La página `DashboardPage` decide qué tarjetas mostrar, qué valores asignar,
+qué identificadores utilizar y en qué orden presentarlas. `KpiCard` se
+responsabiliza de representar visualmente la información recibida.
+
+### Identidad visual aplicada
+
+Colores:
+
+- Primary: `#2589FF`
+- Secondary: `#A7ADB7`
+- Accent: `#E32636`
+- Surface: `#171A20`
+- Background: `#0B0D10`
+- Foreground: `#F4F5F7`
+
+Tipografías:
+
+- Rajdhani mediante `font-display`, para títulos y valores destacados.
+- Inter mediante `font-sans`, para textos generales y navegación.
+
+Las tarjetas utilizan una superficie oscura, esquinas redondeadas,
+padding interior y separación entre sus elementos. Los iconos y valores
+principales utilizan el azul de marca.
+
+### KPI del dashboard
+
+| ID | Indicador | Valor de ejemplo |
+|---|---|---:|
+| KPI / 01 | Productos registrados | 120 |
+| KPI / 02 | Existencias físicas | 120 |
+| KPI / 03 | Reservado | 20 |
+| KPI / 04 | Disponible | 100 |
+
+Los valores son ilustrativos y sirven para construir la interfaz. El frontend
+todavía no consume estos indicadores desde la API.
+
+### Conceptos aprendidos o confirmados
+
+**Props:** son las propiedades que un componente recibe de su padre. Permiten
+reutilizar un mismo componente con diferentes datos.
+
+**TypeScript `type`:** permite declarar la estructura de un objeto, como
+`KpiCardProps`, y detectar usos incorrectos de sus propiedades durante el
+desarrollo.
+
+**`LucideIcon`:** permite tipar una propiedad que recibe un componente de
+icono. El icono puede variar sin tener que crear una tarjeta diferente para
+cada indicador.
+
+**`import type`:** permite importar un tipo como `LucideIcon` de manera
+explícita, sin utilizarlo como un valor de ejecución.
+
+**JSX:** describe la interfaz que React representa. Las expresiones como
+`{props.titulo}` permiten insertar en el JSX los valores recibidos por el
+componente.
+
+**Tailwind CSS:** sus clases de utilidad permiten definir presentación,
+espaciado, tipografía, colores y distribución sin escribir una regla CSS
+individual para cada elemento.
+
+**Flexbox y Grid:** Flexbox permite organizar elementos dentro de una tarjeta,
+mientras que Grid distribuye las tarjetas en filas y columnas.
+
+**Responsive design:** `grid-cols-1 gap-4 md:grid-cols-2` establece una
+columna por defecto y dos columnas a partir del punto de quiebre `md`.
+
+### Cómo lo razoné
+
+La decisión de crear `KpiCard` como componente independiente evita repetir
+la estructura de las cuatro tarjetas. Si se modifica su espaciado, tipografía
+o apariencia, el cambio puede aplicarse a todas las instancias.
+
+También se separó la responsabilidad de organizar el dashboard de la
+responsabilidad de representar una tarjeta. `DashboardPage` conoce el
+propósito y el orden de las KPI, mientras que `KpiCard` se concentra en
+presentarlas.
+
+El orden seleccionado sigue una secuencia de lectura: productos registrados,
+existencias físicas, unidades reservadas y unidades disponibles.
+
+La identidad visual se definió antes de continuar refinando la interfaz para
+evitar utilizar colores y tipografías diferentes sin una razón de diseño.
+
+### Dudas y decisiones
+
+- `w` en las clases de Tailwind corresponde a `width` (ancho), no a `weight`.
+- Los identificadores de las KPI son etiquetas visuales y no representan
+  identificadores de registros de la base de datos.
+- El valor de `Disponible` se presenta como ejemplo. En el dominio de
+  inventario, su cálculo corresponde a `Existencia - Reservado`.
+- Los valores actuales no deben interpretarse como información real de la
+  tienda.
+
+### Límite de la sesión
+
+Se construyó y refinó la presentación visual del dashboard. No se completó
+la conexión entre el frontend y la API REST.
+
+Las páginas de Productos, Inventario y Precios tienen estructura de navegación,
+pero sus interfaces funcionales aún requieren implementación. También queda
+pendiente comprobar el comportamiento completo de visibilidad de la Sidebar.
+
+### Cierre
+
+Construimos → probamos visualmente → reflexionamos → documentamos → cerramos.
+
+---
